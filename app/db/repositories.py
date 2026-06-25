@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import AgentRun, RetrievalEvent
+from app.db.models import AgentRun, RetrievalEvent, ToolCall
 
 
 class AgentRunRepository(Protocol):
@@ -74,3 +74,42 @@ class SqlAlchemyRetrievalEventRepository:
         self.session.commit()
         self.session.refresh(event)
         return event
+
+
+class ToolCallRepository(Protocol):
+    def create(
+        self,
+        run_id: UUID,
+        tool_name: str,
+        tool_input: dict[str, object],
+        tool_output: dict[str, object],
+        status: str,
+        latency_ms: int,
+    ) -> ToolCall: ...
+
+
+class SqlAlchemyToolCallRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self,
+        run_id: UUID,
+        tool_name: str,
+        tool_input: dict[str, object],
+        tool_output: dict[str, object],
+        status: str,
+        latency_ms: int,
+    ) -> ToolCall:
+        tool_call = ToolCall(
+            run_id=run_id,
+            tool_name=tool_name,
+            tool_input=tool_input,
+            tool_output=tool_output,
+            status=status,
+            latency_ms=latency_ms,
+        )
+        self.session.add(tool_call)
+        self.session.commit()
+        self.session.refresh(tool_call)
+        return tool_call

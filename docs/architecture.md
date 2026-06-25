@@ -12,6 +12,17 @@ business question
   → future agent response
 ```
 
+The structured business data flow is:
+
+```text
+business question
+  → agent run
+  → business tool query
+  → PostgreSQL
+  → tool call event
+  → future agent response
+```
+
 The API creates durable agent runs and indexes raw document text as chunks in
 ChromaDB. A run-linked retrieval searches those chunks and records its query
 and results in PostgreSQL under the run identifier.
@@ -25,7 +36,10 @@ and results in PostgreSQL under the run identifier.
 - SQLAlchemy models define PostgreSQL records and relationships.
 - The RAG layer provides deterministic chunking, mock embeddings, and the
   ChromaDB boundary.
+- Local business tools expose approved customer and sales filters without
+  accepting raw SQL.
 - Observability provides a home for logging and future trace instrumentation.
 
-The `tool_calls` table remains a future trace boundary. Retrieval events are
-now written by `POST /runs/{run_id}/retrieve`.
+Retrieval events are written by `POST /runs/{run_id}/retrieve`. Business tool
+calls with a run identifier record their inputs, outputs, completion status,
+and latency in `tool_calls`.

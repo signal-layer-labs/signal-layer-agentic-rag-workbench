@@ -3,10 +3,9 @@
 A traceable agentic RAG workbench for business data, documents, tools, and
 auditable AI responses.
 
-The current version provides traceable agent runs plus raw-text document
-ingestion and retrieval. Documents are split into stable chunks, embedded with
-a deterministic local provider, indexed in ChromaDB, and linked to runs through
-PostgreSQL retrieval events.
+The current version provides traceable agent runs, raw-text document retrieval,
+and deterministic tools for querying structured business data. PostgreSQL
+stores business records and audit events while ChromaDB stores document chunks.
 
 ## Stack
 
@@ -102,6 +101,56 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
   -d '{"query":"What discount approval rules are relevant?","limit":5}'
 ```
 
+## Business data tools
+
+Seed the local fake customer, product, and sales dataset:
+
+```bash
+docker compose exec api python scripts/seed_business_data.py
+```
+
+The script replaces only the seeded business tables. It does not clear agent
+runs, tool calls, or retrieval events.
+
+Query customers:
+
+```bash
+curl -X POST http://localhost:8000/business/customers/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "run_id": "<run_id>",
+    "segment": "enterprise",
+    "region": "east"
+  }'
+```
+
+Query sales:
+
+```bash
+curl -X POST http://localhost:8000/business/sales/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "run_id": "<run_id>",
+    "channel": "online",
+    "limit": 20
+  }'
+```
+
+Summarize sales:
+
+```bash
+curl -X POST http://localhost:8000/business/sales/summary \
+  -H "Content-Type: application/json" \
+  -d '{
+    "run_id": "<run_id>",
+    "region": "east"
+  }'
+```
+
+These endpoints expose deterministic local tools. They do not select or invoke
+tools autonomously. When `run_id` is supplied, the input, output, status, and
+latency are recorded in `tool_calls`.
+
 ## Quality checks
 
 ```bash
@@ -112,8 +161,9 @@ mypy app
 
 ## Current scope
 
-This phase accepts raw text only and uses deterministic mock embeddings. It
-does not parse files, generate natural-language answers, or orchestrate agents.
+This phase accepts raw text only, uses deterministic mock embeddings, and
+provides allowlisted structured queries. It does not parse files, generate
+natural-language answers, or orchestrate agents.
 
 Future phases will add real embedding providers, document parsing, agent tools,
 an MCP server, an LLM provider abstraction, and cost and latency tracking.
