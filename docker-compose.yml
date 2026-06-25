@@ -7,9 +7,22 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://postgres:postgres@postgres:5432/agentic_rag_workbench}
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CHROMA_HOST: ${CHROMA_HOST:-chroma}
+      CHROMA_PORT: ${CHROMA_PORT:-8000}
+      CHROMA_COLLECTION: ${CHROMA_COLLECTION:-business_documents}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-mock}
+      CHUNK_SIZE: ${CHUNK_SIZE:-800}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-120}
     depends_on:
+      chroma:
+        condition: service_started
       postgres:
         condition: service_healthy
+
+  chroma:
+    image: chromadb/chroma:1.5.9
+    volumes:
+      - chroma_data:/data
 
   postgres:
     image: postgres:16
@@ -28,4 +41,5 @@ services:
       retries: 10
 
 volumes:
+  chroma_data:
   postgres_data:
