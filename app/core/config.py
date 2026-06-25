@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     )
     app_env: str = "development"
     log_level: str = "INFO"
+    chroma_host: str = "localhost"
+    chroma_port: int = 8000
+    chroma_collection: str = "business_documents"
+    embedding_provider: str = "mock"
+    chunk_size: int = 800
+    chunk_overlap: int = 120
 
     model_config = SettingsConfigDict(
         env_file=".env",

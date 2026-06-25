@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import AgentRun
+from app.db.models import AgentRun, RetrievalEvent
 
 
 class AgentRunRepository(Protocol):
@@ -41,3 +41,36 @@ class SqlAlchemyAgentRunRepository:
             .limit(limit)
         )
         return self.session.scalars(statement).all()
+
+
+class RetrievalEventRepository(Protocol):
+    def create(
+        self,
+        run_id: UUID,
+        query: str,
+        source: str,
+        retrieved_items: list[dict[str, object]],
+    ) -> RetrievalEvent: ...
+
+
+class SqlAlchemyRetrievalEventRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self,
+        run_id: UUID,
+        query: str,
+        source: str,
+        retrieved_items: list[dict[str, object]],
+    ) -> RetrievalEvent:
+        event = RetrievalEvent(
+            run_id=run_id,
+            query=query,
+            source=source,
+            retrieved_items=retrieved_items,
+        )
+        self.session.add(event)
+        self.session.commit()
+        self.session.refresh(event)
+        return event

@@ -3,25 +3,26 @@
 A traceable agentic RAG workbench for business data, documents, tools, and
 auditable AI responses.
 
-The current version is the backend foundation for traceable agent runs. It
-records a business question as a run and provides database structures for
-future tool and retrieval traces.
+The current version provides traceable agent runs plus raw-text document
+ingestion and retrieval. Documents are split into stable chunks, embedded with
+a deterministic local provider, indexed in ChromaDB, and linked to runs through
+PostgreSQL retrieval events.
 
 ## Stack
 
 - Python 3.12+
 - FastAPI and Pydantic
 - PostgreSQL 16
+- ChromaDB
 - SQLAlchemy 2
 - Docker and Docker Compose
 - pytest, ruff, and mypy
 
 ## Architecture
 
-HTTP routes validate requests and delegate run operations to the service
-layer. The service layer applies run behavior and uses repositories for
-persistence. SQLAlchemy models represent agent runs, tool calls, and retrieval
-events in PostgreSQL.
+HTTP routes validate requests and delegate run and retrieval operations to
+service layers. PostgreSQL stores run traces while ChromaDB stores document
+chunks, metadata, and vectors.
 
 See [docs/architecture.md](docs/architecture.md) for the intended request and
 trace flow.
@@ -58,11 +59,47 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 docker compose up --build
 ```
 
-This starts PostgreSQL and the API at `http://localhost:8000`. Tables are
-created when the API starts. To add one sample run:
+This starts PostgreSQL, ChromaDB, and the API at `http://localhost:8000`.
+Tables and the Chroma collection are created on first use. To add one sample
+run:
 
 ```bash
 docker compose exec api python scripts/seed_postgres.py
+```
+
+## Document retrieval
+
+Ingest raw text:
+
+```bash
+curl -X POST http://localhost:8000/documents/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Commercial Policy",
+    "source": "commercial_policy.md",
+    "content": "Discount approval rules require manager review.",
+    "metadata": {"department": "growth", "document_type": "policy"}
+  }'
+```
+
+Search indexed chunks:
+
+```bash
+curl -X POST http://localhost:8000/documents/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "discount approval rules",
+    "limit": 5,
+    "where": {"department": "growth"}
+  }'
+```
+
+Link retrieval to an existing run:
+
+```bash
+curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What discount approval rules are relevant?","limit":5}'
 ```
 
 ## Quality checks
@@ -75,10 +112,8 @@ mypy app
 
 ## Current scope
 
-This phase provides health checks, run creation and lookup, PostgreSQL models,
-repository boundaries, configuration, logging foundations, and local
-containers.
+This phase accepts raw text only and uses deterministic mock embeddings. It
+does not parse files, generate natural-language answers, or orchestrate agents.
 
-Future phases will add document ingestion, vector retrieval, agent tools, an
-MCP server, an LLM provider abstraction, document parsing, and cost and latency
-tracking. These capabilities are intentionally outside the current scope.
+Future phases will add real embedding providers, document parsing, agent tools,
+an MCP server, an LLM provider abstraction, and cost and latency tracking.
