@@ -53,7 +53,7 @@ def retrieve_for_run(
                 chunk_id=result.chunk_id,
                 document=result.document,
                 metadata=result.metadata,
-                score=result.score,
+                distance=result.distance,
             )
             for result in results
         ],

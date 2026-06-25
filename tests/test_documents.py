@@ -48,7 +48,7 @@ class InMemoryVectorStore:
                 chunk_id=chunk.chunk_id,
                 document=chunk.document,
                 metadata=chunk.metadata,
-                score=1
+                distance=1
                 - sum(
                     left * right
                     for left, right in zip(vector, embedding, strict=True)
@@ -170,6 +170,8 @@ def test_ingest_and_search_documents(
     assert search_response.status_code == 200
     assert search_response.json()["query"] == "discount approval rules"
     assert len(search_response.json()["results"]) == 2
+    assert "distance" in search_response.json()["results"][0]
+    assert "score" not in search_response.json()["results"][0]
 
 
 def test_run_retrieval_creates_event(
@@ -205,3 +207,99 @@ def test_run_retrieval_creates_event(
     assert payload["retrieval_event_id"] == str(event.id)
     assert event.source == "chroma"
     assert event.retrieved_items == payload["results"]
+
+
+@pytest.mark.parametrize(
+    ("payload", "field"),
+    [
+        (
+            {
+                "title": "   ",
+                "source": "policy.md",
+                "content": "Valid content",
+            },
+            "title",
+        ),
+        (
+            {
+                "title": "Policy",
+                "source": "   ",
+                "content": "Valid content",
+            },
+            "source",
+        ),
+        (
+            {
+                "title": "Policy",
+                "source": "policy.md",
+                "content": "   ",
+            },
+            "content",
+        ),
+    ],
+)
+def test_ingest_rejects_whitespace_only_fields(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+    payload: dict[str, str],
+    field: str,
+) -> None:
+    client, _, vector_store, _ = retrieval_context
+
+    response = client.post("/documents/ingest", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"][-1] == field
+    assert vector_store.records == []
+
+
+def test_search_and_run_retrieval_reject_whitespace_only_queries(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, run_id, _, event_repository = retrieval_context
+
+    search_response = client.post(
+        "/documents/search",
+        json={"query": "   "},
+    )
+    retrieval_response = client.post(
+        f"/runs/{run_id}/retrieve",
+        json={"query": "   "},
+    )
+
+    assert search_response.status_code == 422
+    assert retrieval_response.status_code == 422
+    assert event_repository.events == []
+
+
+def test_ingestion_rejects_content_that_produces_no_chunks(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    _, _, vector_store, _ = retrieval_context
+    service = RetrievalService(
+        chunker=TextChunker(chunk_size=30, chunk_overlap=5),
+        embedding_provider=MockEmbeddingProvider(),
+        vector_store=vector_store,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Document content did not produce any indexable chunks.",
+    ):
+        service.ingest("Policy", "policy.md", "   ", {})
+
+    assert vector_store.records == []

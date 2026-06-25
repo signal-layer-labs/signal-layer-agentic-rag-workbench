@@ -21,7 +21,7 @@ class SearchResult:
     chunk_id: str
     document: str
     metadata: ChunkMetadata
-    score: float | None
+    distance: float | None
 
 
 class VectorStore(Protocol):
@@ -83,7 +83,7 @@ class ChromaVectorStore:
                 chunk_id=chunk_id,
                 document=document or "",
                 metadata=_normalize_metadata(metadata or {}),
-                score=distance,
+                distance=distance,
             )
             for chunk_id, document, metadata, distance in zip(
                 ids,

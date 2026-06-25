@@ -1,11 +1,14 @@
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 MetadataValue = str | int | float | bool
 DocumentMetadata = dict[str, MetadataValue]
-NonBlankText = Annotated[str, Field(min_length=1)]
+NonBlankText = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1),
+]
 
 
 class DocumentIngestRequest(BaseModel):
@@ -34,7 +37,7 @@ class DocumentSearchResult(BaseModel):
     chunk_id: str
     document: str
     metadata: DocumentMetadata
-    score: float | None
+    distance: float | None
 
 
 class DocumentSearchResponse(BaseModel):

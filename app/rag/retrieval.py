@@ -33,6 +33,8 @@ class RetrievalService:
     ) -> tuple[UUID, list[str]]:
         document_id = uuid4()
         text_chunks = self.chunker.split(content)
+        if not text_chunks:
+            raise ValueError("Document content did not produce any indexable chunks.")
         total_chunks = len(text_chunks)
         stored_chunks = [
             StoredChunk(
