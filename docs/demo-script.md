@@ -1,24 +1,24 @@
 # Demo script
 
-Start the services:
+1. Start the services:
 
 ```bash
 docker compose up --build
 ```
 
-Seed structured business data:
+2. Seed structured business data:
 
 ```bash
 docker compose exec api python scripts/seed_business_data.py
 ```
 
-1. Check service health:
+3. Check service health:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-2. Create a run:
+4. Create a run:
 
 ```bash
 curl -X POST http://localhost:8000/runs \
@@ -26,7 +26,7 @@ curl -X POST http://localhost:8000/runs \
   -d '{"business_question":"Analyze last quarter sales and summarize risks and opportunities."}'
 ```
 
-3. Ingest a raw-text document:
+5. Ingest a raw-text document:
 
 ```bash
 curl -X POST http://localhost:8000/documents/ingest \
@@ -39,7 +39,7 @@ curl -X POST http://localhost:8000/documents/ingest \
   }'
 ```
 
-4. Copy the returned run identifier and retrieve relevant chunks:
+6. Copy the returned run identifier and retrieve relevant chunks:
 
 ```bash
 curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
@@ -47,13 +47,13 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
   -d '{"query":"What discount approval rules are relevant?","limit":5}'
 ```
 
-5. Retrieve the saved run:
+7. Retrieve the saved run:
 
 ```bash
 curl http://localhost:8000/runs/<run_id>
 ```
 
-6. Query customers using the run identifier:
+8. Query customers using the run identifier:
 
 ```bash
 curl -X POST http://localhost:8000/business/customers/query \
@@ -61,7 +61,7 @@ curl -X POST http://localhost:8000/business/customers/query \
   -d '{"run_id":"<run_id>","segment":"enterprise"}'
 ```
 
-7. Summarize sales using the run identifier:
+9. Summarize sales using the run identifier:
 
 ```bash
 curl -X POST http://localhost:8000/business/sales/summary \

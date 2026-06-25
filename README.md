@@ -117,7 +117,11 @@ Query customers:
 ```bash
 curl -X POST http://localhost:8000/business/customers/query \
   -H "Content-Type: application/json" \
-  -d '{"run_id":"<run_id>","segment":"enterprise","region":"east"}'
+  -d '{
+    "run_id": "<run_id>",
+    "segment": "enterprise",
+    "region": "east"
+  }'
 ```
 
 Query sales:
@@ -125,7 +129,11 @@ Query sales:
 ```bash
 curl -X POST http://localhost:8000/business/sales/query \
   -H "Content-Type: application/json" \
-  -d '{"run_id":"<run_id>","channel":"online","limit":20}'
+  -d '{
+    "run_id": "<run_id>",
+    "channel": "online",
+    "limit": 20
+  }'
 ```
 
 Summarize sales:
@@ -133,7 +141,10 @@ Summarize sales:
 ```bash
 curl -X POST http://localhost:8000/business/sales/summary \
   -H "Content-Type: application/json" \
-  -d '{"run_id":"<run_id>","region":"east"}'
+  -d '{
+    "run_id": "<run_id>",
+    "region": "east"
+  }'
 ```
 
 These endpoints expose deterministic local tools. They do not select or invoke
