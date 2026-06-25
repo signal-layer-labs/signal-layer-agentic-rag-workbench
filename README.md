@@ -7,20 +7,43 @@ The current version provides traceable agent runs, raw-text document retrieval,
 and deterministic tools for querying structured business data. PostgreSQL
 stores business records and audit events while ChromaDB stores document chunks.
 
+## Why this exists
+
+Most AI demos stop at:
+
+```text
+prompt → response
+```
+
+This project explores a more production-oriented pattern:
+
+```text
+business question
+→ traceable run
+→ document retrieval
+→ structured data tools
+→ audit events
+→ future agent response
+```
+
+The goal is to make agentic systems easier to inspect, test, and extend before
+adding autonomous orchestration or real LLM providers.
+
 ## Stack
 
-- Python 3.12+
-- FastAPI and Pydantic
-- PostgreSQL 16
-- ChromaDB
-- SQLAlchemy 2
-- Docker and Docker Compose
-- pytest, ruff, and mypy
+* Python 3.12+
+* FastAPI and Pydantic
+* PostgreSQL 16
+* ChromaDB
+* SQLAlchemy 2
+* Docker and Docker Compose
+* pytest, ruff, and mypy
 
 ## Architecture
 
-HTTP routes validate requests and delegate run and retrieval operations to
-service layers. PostgreSQL stores run traces while ChromaDB stores document
+HTTP routes validate requests and delegate run, retrieval, and business tool
+operations to service layers. PostgreSQL stores run traces, retrieval events,
+tool calls, and structured business records while ChromaDB stores document
 chunks, metadata, and vectors.
 
 See [docs/architecture.md](docs/architecture.md) for the intended request and
@@ -48,9 +71,15 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 
 ## Environment variables
 
-- `DATABASE_URL`: SQLAlchemy connection URL for PostgreSQL.
-- `APP_ENV`: runtime environment name.
-- `LOG_LEVEL`: application logging level.
+* `DATABASE_URL`: SQLAlchemy connection URL for PostgreSQL.
+* `APP_ENV`: runtime environment name.
+* `LOG_LEVEL`: application logging level.
+* `CHROMA_HOST`: ChromaDB host.
+* `CHROMA_PORT`: ChromaDB port.
+* `CHROMA_COLLECTION`: ChromaDB collection name for document chunks.
+* `EMBEDDING_PROVIDER`: embedding provider name. The current implementation uses `mock`.
+* `CHUNK_SIZE`: maximum chunk size for raw text ingestion.
+* `CHUNK_OVERLAP`: overlap size between adjacent text chunks.
 
 ## Docker Compose
 
@@ -59,11 +88,18 @@ docker compose up --build
 ```
 
 This starts PostgreSQL, ChromaDB, and the API at `http://localhost:8000`.
-Tables and the Chroma collection are created on first use. To add one sample
-run:
+Tables and the Chroma collection are created on first use.
+
+To add one sample run:
 
 ```bash
 docker compose exec api python scripts/seed_postgres.py
+```
+
+To seed fake structured business data:
+
+```bash
+docker compose exec api python scripts/seed_business_data.py
 ```
 
 ## Document retrieval
@@ -77,7 +113,10 @@ curl -X POST http://localhost:8000/documents/ingest \
     "title": "Commercial Policy",
     "source": "commercial_policy.md",
     "content": "Discount approval rules require manager review.",
-    "metadata": {"department": "growth", "document_type": "policy"}
+    "metadata": {
+      "department": "growth",
+      "document_type": "policy"
+    }
   }'
 ```
 
@@ -89,7 +128,9 @@ curl -X POST http://localhost:8000/documents/search \
   -d '{
     "query": "discount approval rules",
     "limit": 5,
-    "where": {"department": "growth"}
+    "where": {
+      "department": "growth"
+    }
   }'
 ```
 
@@ -98,8 +139,14 @@ Link retrieval to an existing run:
 ```bash
 curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
   -H "Content-Type: application/json" \
-  -d '{"query":"What discount approval rules are relevant?","limit":5}'
+  -d '{
+    "query": "What discount approval rules are relevant?",
+    "limit": 5
+  }'
 ```
+
+When retrieval is linked to a run, the query, retrieved chunks, metadata, and
+distances are recorded in PostgreSQL as a retrieval event.
 
 ## Business data tools
 
@@ -157,7 +204,15 @@ latency are recorded in `tool_calls`.
 ruff check .
 pytest
 mypy app
+docker compose config
 ```
+
+Current validation:
+
+* Ruff: passing
+* Pytest: 22 tests passing
+* Mypy: no issues in application code
+* Docker Compose config: valid
 
 ## Current scope
 
@@ -167,3 +222,7 @@ natural-language answers, or orchestrate agents.
 
 Future phases will add real embedding providers, document parsing, agent tools,
 an MCP server, an LLM provider abstraction, and cost and latency tracking.
+
+## License
+
+No open-source license has been added yet.
