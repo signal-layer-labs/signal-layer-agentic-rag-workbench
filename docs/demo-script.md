@@ -6,6 +6,12 @@ Start the services:
 docker compose up --build
 ```
 
+Seed structured business data:
+
+```bash
+docker compose exec api python scripts/seed_business_data.py
+```
+
 1. Check service health:
 
 ```bash
@@ -46,3 +52,22 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
 ```bash
 curl http://localhost:8000/runs/<run_id>
 ```
+
+6. Query customers using the run identifier:
+
+```bash
+curl -X POST http://localhost:8000/business/customers/query \
+  -H "Content-Type: application/json" \
+  -d '{"run_id":"<run_id>","segment":"enterprise"}'
+```
+
+7. Summarize sales using the run identifier:
+
+```bash
+curl -X POST http://localhost:8000/business/sales/summary \
+  -H "Content-Type: application/json" \
+  -d '{"run_id":"<run_id>","channel":"online"}'
+```
+
+The resulting `tool_call_id` identifies the audit record showing which
+structured data tool was used, its approved filters, its output, and latency.
