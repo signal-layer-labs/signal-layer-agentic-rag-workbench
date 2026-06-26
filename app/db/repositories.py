@@ -15,6 +15,10 @@ class AgentRunRepository(Protocol):
 
     def list_recent(self, limit: int = 20) -> Sequence[AgentRun]: ...
 
+    def update_status(self, run_id: UUID, status: str) -> AgentRun | None: ...
+
+    def update_summary(self, run_id: UUID, summary: str) -> AgentRun | None: ...
+
 
 class SqlAlchemyAgentRunRepository:
     def __init__(self, session: Session) -> None:
@@ -41,6 +45,26 @@ class SqlAlchemyAgentRunRepository:
             .limit(limit)
         )
         return self.session.scalars(statement).all()
+
+    def update_status(self, run_id: UUID, status: str) -> AgentRun | None:
+        run = self.get_by_id(run_id)
+        if run is None:
+            return None
+        run.status = status
+        self.session.add(run)
+        self.session.commit()
+        self.session.refresh(run)
+        return run
+
+    def update_summary(self, run_id: UUID, summary: str) -> AgentRun | None:
+        run = self.get_by_id(run_id)
+        if run is None:
+            return None
+        run.summary = summary
+        self.session.add(run)
+        self.session.commit()
+        self.session.refresh(run)
+        return run
 
 
 class RetrievalEventRepository(Protocol):

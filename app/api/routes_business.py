@@ -1,9 +1,6 @@
-from collections.abc import Callable
-from time import perf_counter
-from typing import Annotated, TypeVar
-from uuid import UUID
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.business_repositories import (
@@ -12,10 +9,8 @@ from app.db.business_repositories import (
     SqlAlchemyBusinessRepository,
 )
 from app.db.repositories import (
-    AgentRunRepository,
     SqlAlchemyAgentRunRepository,
     SqlAlchemyToolCallRepository,
-    ToolCallRepository,
 )
 from app.db.session import get_db_session
 from app.schemas.business import (
@@ -27,6 +22,7 @@ from app.schemas.business import (
     ToolExecutionResponse,
 )
 from app.services.business_service import BusinessService
+from app.services.business_tool_executor import BusinessToolExecutor
 from app.tools.business_tools import (
     query_customers_tool,
     query_sales_tool,
@@ -34,48 +30,6 @@ from app.tools.business_tools import (
 )
 
 router = APIRouter(prefix="/business", tags=["business"])
-ResultT = TypeVar("ResultT")
-
-
-class BusinessToolExecutor:
-    def __init__(
-        self,
-        service: BusinessService,
-        run_repository: AgentRunRepository,
-        tool_call_repository: ToolCallRepository,
-    ) -> None:
-        self.service = service
-        self.run_repository = run_repository
-        self.tool_call_repository = tool_call_repository
-
-    def execute(
-        self,
-        tool_name: str,
-        run_id: UUID | None,
-        tool_input: dict[str, object],
-        operation: Callable[[], ResultT],
-        serialize: Callable[[ResultT], dict[str, object]],
-    ) -> tuple[ResultT, UUID | None]:
-        if run_id is not None and self.run_repository.get_by_id(run_id) is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agent run not found.",
-            )
-        started_at = perf_counter()
-        result = operation()
-        latency_ms = max(0, round((perf_counter() - started_at) * 1000))
-        if run_id is None:
-            return result, None
-        tool_call = self.tool_call_repository.create(
-            run_id=run_id,
-            tool_name=tool_name,
-            tool_input=tool_input,
-            tool_output=serialize(result),
-            status="completed",
-            latency_ms=latency_ms,
-        )
-        return result, tool_call.id
-
 
 def get_business_tool_executor(
     session: Annotated[Session, Depends(get_db_session)],

@@ -4,8 +4,9 @@ A traceable agentic RAG workbench for business data, documents, tools, and
 auditable AI responses.
 
 The current version provides traceable agent runs, raw-text document retrieval,
-and deterministic tools for querying structured business data. PostgreSQL
-stores business records and audit events while ChromaDB stores document chunks.
+deterministic orchestration, and deterministic tools for querying structured
+business data. PostgreSQL stores business records and audit events while
+ChromaDB stores document chunks.
 
 ## Why this exists
 
@@ -23,11 +24,12 @@ business question
 → document retrieval
 → structured data tools
 → audit events
+→ deterministic orchestration
 → future agent response
 ```
 
 The goal is to make agentic systems easier to inspect, test, and extend before
-adding autonomous orchestration or real LLM providers.
+adding autonomous tool selection or real LLM providers.
 
 ## Stack
 
@@ -148,6 +150,27 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
 When retrieval is linked to a run, the query, retrieved chunks, metadata, and
 distances are recorded in PostgreSQL as a retrieval event.
 
+## Deterministic orchestration
+
+Run the explicit orchestration flow:
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise"
+  }'
+```
+
+This endpoint creates a run, optionally retrieves document context, executes
+approved business tools with run-linked audit logging, and returns a
+deterministic trace summary. It does not use an LLM or select tools
+autonomously.
+
 ## Business data tools
 
 Seed the local fake customer, product, and sales dataset:
@@ -210,15 +233,16 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 22 tests passing
+* Pytest: 29 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
 ## Current scope
 
 This phase accepts raw text only, uses deterministic mock embeddings, and
-provides allowlisted structured queries. It does not parse files, generate
-natural-language answers, or orchestrate agents.
+provides allowlisted structured queries plus an explicit orchestration flow. It
+does not parse files, generate natural-language answers, or perform autonomous
+LLM tool selection.
 
 Future phases will add real embedding providers, document parsing, agent tools,
 an MCP server, an LLM provider abstraction, and cost and latency tracking.

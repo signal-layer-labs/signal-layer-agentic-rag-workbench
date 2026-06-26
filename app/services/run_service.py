@@ -40,6 +40,12 @@ class RunService:
     def list_recent_runs(self, limit: int = 20) -> list[AgentRun]:
         return list(self.repository.list_recent(limit))
 
+    def update_status(self, run_id: UUID, status: str) -> AgentRun | None:
+        return self.repository.update_status(run_id, status)
+
+    def update_summary(self, run_id: UUID, summary: str) -> AgentRun | None:
+        return self.repository.update_summary(run_id, summary)
+
     def log_retrieval(
         self,
         run_id: UUID,
