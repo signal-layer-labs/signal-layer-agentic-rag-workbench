@@ -3,6 +3,7 @@
 Potential modules for later phases include:
 
 - real embedding providers
+- current MCP support is a local stdio foundation only
 - Docling for document parsing
 - Crawl4AI for web scraping
 - real provider hardening
@@ -17,7 +18,6 @@ Potential modules for later phases include:
 - structured error semantics
 - timeouts and budgets
 - richer observability for MCP calls
-- MCP server exposure
 - streaming execution traces
 - richer error recovery
 - safer permissioning and allowlists for tools

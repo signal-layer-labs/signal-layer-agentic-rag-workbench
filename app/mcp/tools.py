@@ -20,6 +20,8 @@ from app.mcp.schemas import (
     RunTraceableWorkflowInput,
     SummarizeSalesToolInput,
 )
+from app.providers.factory import get_llm_provider
+from app.rag.chunking import TextChunker
 from app.rag.embeddings import MockEmbeddingProvider
 from app.rag.retrieval import RetrievalService
 from app.rag.vector_store import ChromaVectorStore
@@ -48,10 +50,7 @@ def build_business_service(session: Session) -> BusinessService:
 def build_agent_orchestrator(session: Session) -> AgentOrchestrator:
     settings = get_settings()
     retrieval_service = RetrievalService(
-        chunker=__import__(
-            "app.rag.chunking",
-            fromlist=["TextChunker"],
-        ).TextChunker(settings.chunk_size, settings.chunk_overlap),
+        chunker=TextChunker(settings.chunk_size, settings.chunk_overlap),
         embedding_provider=MockEmbeddingProvider(),
         vector_store=ChromaVectorStore(
             host=settings.chroma_host,
@@ -68,12 +67,7 @@ def build_agent_orchestrator(session: Session) -> AgentOrchestrator:
         run_repository=SqlAlchemyAgentRunRepository(session),
         tool_call_repository=SqlAlchemyToolCallRepository(session),
     )
-    response_generator = ResponseGenerator(
-        __import__(
-            "app.providers.factory",
-            fromlist=["get_llm_provider"],
-        ).get_llm_provider()
-    )
+    response_generator = ResponseGenerator(get_llm_provider())
     return AgentOrchestrator(
         run_service=run_service,
         retrieval_service=retrieval_service,

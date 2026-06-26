@@ -27,6 +27,11 @@ def create_mcp_server() -> Any:
         status: str | None = None,
         limit: int = 20,
     ) -> list[dict[str, object]]:
+        """Return structured customer matches using approved deterministic filters only.
+
+        This tool reuses service-layer customer queries, does not accept raw SQL,
+        and does not execute shell commands.
+        """
         results = query_customers(
             {
                 "segment": segment,
@@ -44,6 +49,11 @@ def create_mcp_server() -> Any:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, object]:
+        """Return a deterministic sales summary from approved service-layer filters.
+
+        This tool reuses existing summary logic, does not accept raw SQL, and
+        does not execute shell commands.
+        """
         summary = summarize_sales(
             {
                 "region": region,
@@ -63,6 +73,12 @@ def create_mcp_server() -> Any:
         customer_segment: str | None = None,
         generate_response: bool = False,
     ) -> dict[str, object]:
+        """Run the deterministic workflow and return a traceable run result.
+
+        This tool reuses approved service-layer orchestration, does not accept
+        raw SQL, does not execute shell commands, and may record
+        retrieval_events and tool_calls.
+        """
         response = run_traceable_workflow(
             {
                 "business_question": business_question,

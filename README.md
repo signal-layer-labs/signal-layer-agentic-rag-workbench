@@ -293,8 +293,10 @@ can optionally generate a final response from the recorded trace through a
 controlled provider abstraction. It does not parse files or perform autonomous
 LLM tool selection.
 
-Future phases will add document parsing, agent tools, real provider hardening,
-structured output, evals, and further cost and latency tracking.
+Future phases will add remote MCP transport, auth and permissioning, tool
+allowlist policies, structured error semantics, timeouts and budgets, richer
+observability for MCP calls, Agno-based autonomous orchestration, Docling
+document parsing, and further cost and latency tracking.
 
 ## License
 
