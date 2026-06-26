@@ -264,6 +264,17 @@ the existing retrieval and business services plus the existing orchestrator for
 trace creation. This phase does not add AgentOS deployment, unrestricted tools,
 auth, or external provider calls in tests.
 
+Agent-facing allowlisted Agno tools in this foundation are:
+
+* `retrieve_documents`
+* `query_customers`
+* `summarize_sales`
+
+The trace-first adapter still uses the existing `AgentOrchestrator` internally
+to create `agent_runs`, `retrieval_events`, `tool_calls`, and the final trace.
+That orchestration path is internal adapter behavior in this foundation, not an
+unrestricted model-controlled tool.
+
 ## Business data tools
 
 Seed the local fake customer, product, and sales dataset:
@@ -403,7 +414,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 103 tests passing
+* Pytest: 105 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 

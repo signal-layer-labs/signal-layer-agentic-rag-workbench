@@ -55,6 +55,8 @@ class AgnoAgentRunner:
             "retrieve_documents": retrieve_documents_tool,
             "query_customers": query_customers_tool,
             "summarize_sales": summarize_sales_tool,
+        }
+        self._internal_registry = {
             "run_traceable_workflow": run_traceable_workflow_tool,
         }
 
@@ -73,15 +75,13 @@ class AgnoAgentRunner:
         return descriptors
 
     def invoke_tool(self, tool_name: str, **kwargs: Any) -> Any:
-        if tool_name not in self._descriptor_registry:
-            raise validation_error(f"Unknown Agno tool: {tool_name}")
         if tool_name == "retrieve_documents":
             return retrieve_documents_tool(self.retrieval_service, **kwargs)
         if tool_name == "query_customers":
             return query_customers_tool(self.business_service, **kwargs)
         if tool_name == "summarize_sales":
             return summarize_sales_tool(self.business_service, **kwargs)
-        if tool_name == "run_traceable_workflow":
+        if tool_name in self._internal_registry:
             return run_traceable_workflow_tool(self.orchestrator, **kwargs)
         raise validation_error(f"Unknown Agno tool: {tool_name}")
 
@@ -103,11 +103,7 @@ class AgnoAgentRunner:
     def run(self, request: AgnoAgentRunRequest) -> AgnoAgentRunResponse:
         self.prepare_agent()
         response = self.orchestrator.run(request)
-        allowed_tools = [
-            descriptor.name
-            for descriptor in self.get_tool_descriptors()
-            if descriptor.name != "run_traceable_workflow"
-        ]
+        allowed_tools = [descriptor.name for descriptor in self.get_tool_descriptors()]
         agent_output = (
             "Agno agent adapter executed through the trace-first workflow using "
             f"allowlisted tools: {', '.join(allowed_tools)}."

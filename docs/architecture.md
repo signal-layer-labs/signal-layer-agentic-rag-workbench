@@ -112,6 +112,11 @@ The Agno adapter is optional and controlled. It does not bypass the existing
 trace-first orchestration baseline or expose raw SQL, shell commands, or
 unrestricted tool selection.
 
+Agent-facing allowlisted tools in this foundation are `retrieve_documents`,
+`query_customers`, and `summarize_sales`. The existing traceable workflow
+through `AgentOrchestrator` remains internal adapter behavior and is not
+exposed as an unrestricted model-controlled tool.
+
 ## Production hardening flow
 
 ```text

@@ -14,7 +14,7 @@ from app.main import app
 from app.providers.mock_provider import MockLLMProvider
 from app.rag.retrieval import get_retrieval_service
 from app.rag.vector_store import SearchResult
-from app.services.agent_orchestrator import AgentOrchestrator
+from app.services.agent_orchestrator import AgentOrchestrator, get_agent_orchestrator
 from app.services.business_service import BusinessService
 from app.services.business_tool_executor import BusinessToolExecutor
 from app.services.response_generator import ResponseGenerator
@@ -215,6 +215,7 @@ def agno_context() -> tuple[
         business_service=business_service,
     )
     app.dependency_overrides[get_agno_agent_runner] = lambda: runner
+    app.dependency_overrides[get_agent_orchestrator] = lambda: orchestrator
     app.dependency_overrides[get_retrieval_service] = lambda: retrieval_service
     yield (
         TestClient(app),
@@ -297,7 +298,6 @@ def test_agno_runner_uses_allowlisted_tools_only(
         "retrieve_documents",
         "query_customers",
         "summarize_sales",
-        "run_traceable_workflow",
     ]
 
 
@@ -330,6 +330,42 @@ def test_agno_tool_docstrings_exist(
     descriptors = runner.get_tool_descriptors()
 
     assert all(descriptor.description for descriptor in descriptors)
+
+
+def test_fastapi_app_starts_without_agno_dependency_or_real_provider_credentials(
+    agno_context: tuple[
+        TestClient,
+        AgnoAgentRunner,
+        InMemoryAgentRunRepository,
+        InMemoryRetrievalEventRepository,
+        InMemoryToolCallRepository,
+    ],
+) -> None:
+    client, _, _, _, _ = agno_context
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+
+
+def test_deterministic_agent_run_remains_unaffected_by_agno_adapter(
+    agno_context: tuple[
+        TestClient,
+        AgnoAgentRunner,
+        InMemoryAgentRunRepository,
+        InMemoryRetrievalEventRepository,
+        InMemoryToolCallRepository,
+    ],
+) -> None:
+    client, _, _, _, _ = agno_context
+
+    response = client.post(
+        "/agent/run",
+        json={"business_question": "Analyze online sales performance."},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
 
 
 def test_retrieve_documents_tool_respects_max_retrieval_results(
