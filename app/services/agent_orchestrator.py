@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.api.routes_business import BusinessToolExecutor
 from app.db.business_repositories import (
     CustomerFilters,
     SalesFilters,
@@ -26,6 +25,7 @@ from app.schemas.agent import (
 )
 from app.schemas.business import CustomerSummary, SalesSummary
 from app.services.business_service import BusinessService
+from app.services.business_tool_executor import BusinessToolExecutor
 from app.services.run_service import RunService
 from app.tools.business_tools import query_customers_tool, summarize_sales_tool
 

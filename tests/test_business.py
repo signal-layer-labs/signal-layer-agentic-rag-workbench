@@ -6,14 +6,12 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.routes_business import (
-    BusinessToolExecutor,
-    get_business_tool_executor,
-)
+from app.api.routes_business import get_business_tool_executor
 from app.db.business_repositories import CustomerFilters, SalesFilters
 from app.db.models import AgentRun, Customer, Product, Sale, ToolCall
 from app.main import app
 from app.services.business_service import BusinessService
+from app.services.business_tool_executor import BusinessToolExecutor
 from scripts.seed_business_data import build_business_seed_data
 
 

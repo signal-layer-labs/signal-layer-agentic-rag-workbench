@@ -6,7 +6,6 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.routes_business import BusinessToolExecutor
 from app.db.models import AgentRun, Customer, RetrievalEvent, Sale, ToolCall
 from app.main import app
 from app.rag.retrieval import get_retrieval_service
@@ -17,6 +16,7 @@ from app.services.agent_orchestrator import (
     get_agent_orchestrator,
 )
 from app.services.business_service import BusinessService
+from app.services.business_tool_executor import BusinessToolExecutor
 from app.services.run_service import RunService
 
 
