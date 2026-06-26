@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -22,6 +22,27 @@ class DocumentIngestResponse(BaseModel):
     document_id: UUID
     title: str
     source: str
+    chunks_created: int
+    chunk_ids: list[str]
+    status: str
+
+
+class ParsedDocumentResponse(BaseModel):
+    title: str
+    source: str
+    content_preview: str
+    content_length: int
+    content_type: str
+    parser: str
+    metadata: dict[str, Any]
+
+
+class ParsedIngestResponse(BaseModel):
+    document_id: UUID
+    title: str
+    source: str
+    parser: str
+    content_type: str
     chunks_created: int
     chunk_ids: list[str]
     status: str
