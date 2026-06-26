@@ -2,19 +2,25 @@
 
 For a client-friendly overview, see [docs/demo.md](demo.md).
 
-1. Start the services:
+## 1. Start services
 
 ```bash
 docker compose up --build
 ```
 
-2. Seed structured business data:
+## 2. Seed business data
 
 ```bash
 docker compose exec api python scripts/seed_business_data.py
 ```
 
-3. Parse and ingest the sample policy document:
+## 3. Check service health
+
+```bash
+curl http://localhost:8000/health
+```
+
+## 4. Parse and ingest the sample policy document
 
 ```bash
 curl -X POST http://localhost:8000/documents/parse-ingest \
@@ -22,7 +28,7 @@ curl -X POST http://localhost:8000/documents/parse-ingest \
   -F 'metadata={"department":"growth","document_type":"policy"}'
 ```
 
-4. Search indexed chunks for the approval rule:
+## 5. Search indexed chunks
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
@@ -36,7 +42,7 @@ curl -X POST http://localhost:8000/documents/search \
   }'
 ```
 
-5. Run the deterministic orchestration endpoint:
+## 6. Run deterministic orchestration
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
@@ -50,7 +56,7 @@ curl -X POST http://localhost:8000/agent/run \
   }'
 ```
 
-6. Run orchestration with controlled response generation:
+## 7. Run controlled response generation
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
@@ -65,7 +71,7 @@ curl -X POST http://localhost:8000/agent/run \
   }'
 ```
 
-7. Run the optional Agno adapter endpoint:
+## 8. Run the optional Agno adapter endpoint
 
 ```bash
 curl -X POST http://localhost:8000/agent/agno/run \
@@ -81,7 +87,9 @@ curl -X POST http://localhost:8000/agent/agno/run \
   }'
 ```
 
-8. Run the local MCP server in a separate stdio process:
+## 9. Run the local MCP server
+
+Run this in a separate stdio process:
 
 ```bash
 python -m app.mcp.server
@@ -95,22 +103,22 @@ summarize_sales
 run_traceable_workflow
 ```
 
-9. Run the deterministic eval script:
+## 10. Run deterministic evals from the script
 
 ```bash
 python scripts/run_evals.py
 ```
 
-This is intended for local and demo use and ingests built-in eval documents
-into the local retrieval/vector store.
+The built-in eval runner is intended for local and demo use and ingests
+built-in eval documents into the local retrieval/vector store.
 
-10. Run the same eval suite through the API:
+## 11. Run deterministic evals through the API
 
 ```bash
 curl -X POST http://localhost:8000/evals/run
 ```
 
-11. Trigger a controlled budget error:
+## 12. Trigger a structured budget error
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
@@ -120,3 +128,6 @@ curl -X POST http://localhost:8000/documents/search \
     "limit": 20
   }'
 ```
+
+This returns a structured error response instead of a stack trace when the
+request exceeds the configured retrieval budget.

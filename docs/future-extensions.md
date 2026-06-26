@@ -1,5 +1,8 @@
 # Future extensions
 
+These are directional extension points, not dependencies of the current local
+workbench foundation.
+
 ## Retrieval and ingestion
 
 * real embedding providers
@@ -54,6 +57,3 @@
 * cost and latency observability
 * queue-based execution
 * frontend or dashboard work as optional future work
-
-These are directional extension points, not dependencies of the current local
-workbench foundation.
