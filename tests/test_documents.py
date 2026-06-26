@@ -330,6 +330,18 @@ def test_text_parser_rejects_blank_content() -> None:
         )
 
 
+def test_text_parser_rejects_invalid_utf8() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Document content must be valid UTF-8 text.",
+    ):
+        PlainTextParser().parse(
+            "commercial_policy.txt",
+            b"\xff\xfe\xfd",
+            "text/plain",
+        )
+
+
 def test_markdown_parser_parses_markdown_text() -> None:
     parsed = MarkdownParser().parse(
         "commercial_policy.md",
@@ -340,6 +352,18 @@ def test_markdown_parser_parses_markdown_text() -> None:
     assert parsed.title == "commercial_policy"
     assert parsed.parser == "markdown"
     assert "# Commercial Policy" in parsed.content
+
+
+def test_markdown_parser_rejects_invalid_utf8() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Document content must be valid UTF-8 text.",
+    ):
+        MarkdownParser().parse(
+            "commercial_policy.md",
+            b"\xff\xfe\xfd",
+            "text/markdown",
+        )
 
 
 def test_parser_service_selects_parser_by_extension() -> None:
@@ -539,9 +563,62 @@ def test_upload_over_size_limit_is_rejected() -> None:
 def test_pdf_parser_behavior_is_clear_when_docling_is_unavailable() -> None:
     service = DocumentParsingService()
 
-    with pytest.raises(ValueError, match="Docling support"):
+    with pytest.raises(
+        ValueError,
+        match="PDF parsing through Docling is not wired in this environment yet.",
+    ):
         service.parse(
             filename="commercial_policy.pdf",
             content=b"%PDF-1.4",
             content_type="application/pdf",
         )
+
+
+def test_parse_rejects_invalid_utf8_text_upload(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.txt",
+                b"\xff\xfe\xfd",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Document content must be valid UTF-8 text."
+
+
+def test_parse_rejects_invalid_utf8_markdown_upload(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"\xff\xfe\xfd",
+                "text/markdown",
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Document content must be valid UTF-8 text."

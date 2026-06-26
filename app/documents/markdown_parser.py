@@ -13,7 +13,12 @@ class MarkdownParser(DocumentParser):
         content: bytes,
         content_type: str | None = None,
     ) -> ParsedDocument:
-        text = content.decode("utf-8").strip()
+        try:
+            text = content.decode("utf-8").strip()
+        except UnicodeDecodeError as error:
+            raise ValueError(
+                "Document content must be valid UTF-8 text."
+            ) from error
         if not text:
             raise ValueError("Parsed document content cannot be blank.")
         path = Path(filename)

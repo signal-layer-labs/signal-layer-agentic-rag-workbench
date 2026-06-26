@@ -118,7 +118,7 @@ Document parsing supports:
 * `.txt`
 * `.md`
 * `.markdown`
-* `.pdf` when Docling support is available
+* `.pdf` as an optional reserved Docling parser path
 
 Uploaded files are parsed in memory and are not persisted in this phase.
 
@@ -182,7 +182,8 @@ curl -X POST http://localhost:8000/documents/parse-ingest \
   -F 'metadata={"department":"growth"}'
 ```
 
-PDF parsing depends on Docling support when `.pdf` files are used.
+PDF parsing is reserved for the optional Docling parser path and fails clearly
+unless Docling extraction is wired in the environment.
 
 ## Deterministic orchestration
 

@@ -18,8 +18,8 @@ class DoclingPdfParser(DocumentParser):
     ) -> ParsedDocument:
         if docling is None:
             raise ValueError(
-                "PDF parsing requires Docling support, which is not installed."
+                "PDF parsing through Docling is not wired in this environment yet."
             )
-        raise NotImplementedError(
-            "Docling PDF parsing support is not wired in this environment yet."
+        raise ValueError(
+            "PDF parsing through Docling is not wired in this environment yet."
         )
