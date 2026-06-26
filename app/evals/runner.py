@@ -22,7 +22,12 @@ class EvalRunner:
                     title=document.title,
                     source=document.source,
                     content=document.content,
-                    metadata=document.metadata,
+                    metadata={
+                        **document.metadata,
+                        "eval_case_id": case.id,
+                        "eval_case_name": case.name,
+                        "eval_source": "built-in",
+                    },
                 )
 
             retrieval_results = (

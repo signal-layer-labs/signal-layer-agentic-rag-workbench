@@ -265,6 +265,19 @@ def test_invalid_eval_case_rejected() -> None:
         )
 
 
+def test_eval_case_with_retrieval_query_requires_expected_source() -> None:
+    with pytest.raises(ValidationError):
+        EvalCase(
+            id="bad-source-case",
+            name="Bad source case",
+            business_question="Question",
+            documents=[],
+            retrieval_query="policy lookup",
+            expected_keywords=["policy"],
+            expected_source=None,
+        )
+
+
 def test_retrieval_metric_pass_and_fail() -> None:
     case = EvalCase(
         id="retrieval-check",
@@ -420,6 +433,37 @@ def test_eval_runner_returns_total_passed_failed(
     assert report.total == 3
     assert report.passed == 3
     assert report.failed == 0
+
+
+def test_eval_runner_adds_eval_metadata_to_ingested_documents(
+    eval_context: tuple[EvalRunner, EvalService],
+) -> None:
+    runner, _ = eval_context
+    vector_store = runner.retrieval_service.vector_store
+    case = EvalCase(
+        id="metadata-check",
+        name="Metadata check",
+        business_question="Find the policy.",
+        documents=[
+            {
+                "title": "Policy",
+                "source": "policy.md",
+                "content": "Discount approval rules require manager review.",
+                "metadata": {"department": "growth"},
+            }
+        ],
+        retrieval_query="discount approval rules",
+        expected_keywords=["discount"],
+        expected_source="policy.md",
+    )
+
+    runner.run_cases([case])
+
+    first_metadata = vector_store.records[0][0].metadata
+    assert first_metadata["department"] == "growth"
+    assert first_metadata["eval_case_id"] == "metadata-check"
+    assert first_metadata["eval_case_name"] == "Metadata check"
+    assert first_metadata["eval_source"] == "built-in"
 
 
 def test_evals_run_endpoint_returns_structured_report(

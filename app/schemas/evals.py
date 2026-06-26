@@ -32,10 +32,15 @@ class EvalCase(BaseModel):
 
     @model_validator(mode="after")
     def validate_case(self) -> "EvalCase":
-        if self.retrieval_query is not None and not self.expected_keywords:
-            raise ValueError(
-                "expected_keywords must be provided when retrieval_query is set."
-            )
+        if self.retrieval_query is not None:
+            if not self.expected_keywords:
+                raise ValueError(
+                    "expected_keywords must be provided when retrieval_query is set."
+                )
+            if self.expected_source is None:
+                raise ValueError(
+                    "expected_source must be provided when retrieval_query is set."
+                )
         return self
 
 

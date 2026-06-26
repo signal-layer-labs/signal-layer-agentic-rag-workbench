@@ -158,6 +158,8 @@ python scripts/run_evals.py
 
 This prints a concise pass/fail report for the built-in retrieval and
 orchestration cases.
+It is intended for local and demo use and ingests the built-in eval documents
+into the local retrieval/vector store.
 
 17. Run the same eval suite through the API:
 

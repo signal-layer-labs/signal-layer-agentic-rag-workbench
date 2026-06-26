@@ -315,6 +315,8 @@ The eval flow loads golden cases, ingests their documents through the existing
 chunking and retrieval path, runs the deterministic orchestration workflow, and
 scores retrieval, response, and trace behavior with local deterministic checks.
 It does not use LLM-as-judge, RAGAS-style metrics, or external eval services.
+The built-in eval runner is intended for local and demo use and ingests the
+built-in eval documents into the local retrieval/vector store.
 
 ## Quality checks
 
