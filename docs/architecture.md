@@ -81,6 +81,21 @@ The MCP wrapper layer reuses the same deterministic business and orchestration
 services used by the HTTP API. It does not expose raw SQL, shell execution, or
 arbitrary write operations.
 
+## RAG evaluation flow
+
+```text
+golden eval case
+  → ingest case documents
+  → run deterministic orchestration
+  → inspect retrieval_events / tool_calls / generated_response
+  → compute deterministic metrics
+  → eval report
+```
+
+The eval layer reuses the existing ingestion, retrieval, orchestration, and
+response-generation boundaries. It scores retrieval expectations, generated
+response consistency, and trace creation without using LLM-as-judge behavior.
+
 ## Layers
 
 - API routes define HTTP contracts and status handling.

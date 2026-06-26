@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from app.api.routes_agent import router as agent_router
 from app.api.routes_business import router as business_router
 from app.api.routes_documents import router as documents_router
+from app.api.routes_evals import router as evals_router
 from app.api.routes_health import router as health_router
 from app.api.routes_runs import router as runs_router
 from app.core.config import get_settings
@@ -32,3 +33,4 @@ app.include_router(runs_router)
 app.include_router(documents_router)
 app.include_router(business_router)
 app.include_router(agent_router)
+app.include_router(evals_router)
