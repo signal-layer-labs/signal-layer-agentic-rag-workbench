@@ -169,3 +169,34 @@ curl -X POST http://localhost:8000/evals/run
 
 Review the `total`, `passed`, `failed`, and per-case metric results to confirm
 retrieval, response generation, and trace behavior remain stable.
+
+18. Trigger a controlled budget error:
+
+```bash
+curl -X POST http://localhost:8000/documents/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"discount approval rules","limit":20}'
+```
+
+This returns a structured error response instead of a stack trace when the
+request exceeds the configured retrieval budget.
+
+19. Trigger a controlled provider configuration error:
+
+```bash
+LLM_PROVIDER=openai uvicorn app.main:app --reload
+```
+
+Then call:
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question":"Generate a response from the trace.",
+    "generate_response":true
+  }'
+```
+
+If no provider key is configured, the API returns a controlled structured error
+instead of exposing internal exception details.

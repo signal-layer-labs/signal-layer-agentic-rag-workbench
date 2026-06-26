@@ -26,6 +26,12 @@ Potential modules for later phases include:
 - Agno-based orchestration
 - remote MCP transport
 - auth/permissioning
+- production secrets management
+- rate limiting
+- distributed tracing
+- persistent audit exports
+- remote MCP transport security
+- real provider retry policies
 - tool allowlist policies
 - structured error semantics
 - timeouts and budgets

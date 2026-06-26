@@ -1,9 +1,10 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.errors import AppError, mcp_tool_error, validation_error
 from app.db.business_repositories import (
     CustomerFilters,
     SalesFilters,
@@ -16,6 +17,7 @@ from app.db.repositories import (
 )
 from app.db.session import SessionLocal
 from app.mcp.schemas import (
+    MCPErrorEnvelope,
     QueryCustomersToolInput,
     RunTraceableWorkflowInput,
     SummarizeSalesToolInput,
@@ -74,6 +76,25 @@ def build_agent_orchestrator(session: Session) -> AgentOrchestrator:
         business_executor=business_executor,
         response_generator=response_generator,
     )
+
+
+def normalize_mcp_error(error: Exception) -> MCPErrorEnvelope:
+    if isinstance(error, AppError):
+        app_error = error
+    elif isinstance(error, ValueError):
+        app_error = validation_error(str(error))
+    else:
+        app_error = mcp_tool_error("The MCP tool request failed.")
+    return MCPErrorEnvelope.model_validate(app_error.to_response())
+
+
+def execute_mcp_tool[ResultT](
+    operation: Callable[[], ResultT],
+) -> ResultT | MCPErrorEnvelope:
+    try:
+        return operation()
+    except Exception as error:
+        return normalize_mcp_error(error)
 
 
 def query_customers(

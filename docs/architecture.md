@@ -96,6 +96,19 @@ The eval layer reuses the existing ingestion, retrieval, orchestration, and
 response-generation boundaries. It scores retrieval expectations, generated
 response consistency, and trace creation without using LLM-as-judge behavior.
 
+## Production hardening flow
+
+```text
+request / tool / provider failure
+  → AppError or normalized error
+  → structured HTTP response or controlled MCP envelope
+  → trace / eval output remains inspectable
+```
+
+The hardening layer adds shared error types, provider normalization, budget
+guardrails, and latency measurement helpers without changing the deterministic
+execution model.
+
 ## Layers
 
 - API routes define HTTP contracts and status handling.

@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.core.budgets import ensure_limit_within_budget
+from app.core.config import get_settings
 from app.db.business_repositories import SqlAlchemyBusinessRepository
 from app.db.repositories import (
     SqlAlchemyAgentRunRepository,
@@ -26,7 +28,13 @@ class EvalService:
         self.runner = runner
 
     def run_builtin_cases(self) -> EvalRunReport:
-        return self.runner.run_cases(get_builtin_eval_cases())
+        cases = get_builtin_eval_cases()
+        ensure_limit_within_budget(
+            limit=len(cases),
+            max_limit=get_settings().max_eval_cases,
+            resource_name="eval_cases",
+        )
+        return self.runner.run_cases(cases)
 
 
 def build_eval_service(

@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from app.core.config import get_settings
+from app.core.errors import unsupported_provider
 from app.providers.base import LLMProvider
 from app.providers.deepseek_provider import DeepSeekLLMProvider
 from app.providers.gemini_provider import GeminiLLMProvider
@@ -21,7 +22,7 @@ def create_llm_provider(
         return GeminiLLMProvider(model=model, api_key=api_key)
     if provider_name == "deepseek":
         return DeepSeekLLMProvider(model=model, api_key=api_key)
-    raise ValueError(
+    raise unsupported_provider(
         "Unsupported LLM provider. Expected one of: "
         "mock, openai, gemini, deepseek."
     )

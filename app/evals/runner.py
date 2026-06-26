@@ -1,3 +1,5 @@
+from app.core.budgets import ensure_limit_within_budget
+from app.core.config import get_settings
 from app.evals.metrics import evaluate_response, evaluate_retrieval, evaluate_trace
 from app.rag.retrieval import RetrievalService
 from app.schemas.agent import AgentRunRequest
@@ -15,6 +17,11 @@ class EvalRunner:
         self.orchestrator = orchestrator
 
     def run_cases(self, cases: list[EvalCase]) -> EvalRunReport:
+        ensure_limit_within_budget(
+            limit=len(cases),
+            max_limit=get_settings().max_eval_cases,
+            resource_name="eval_cases",
+        )
         results: list[OverallEvalResult] = []
         for case in cases:
             for document in case.documents:

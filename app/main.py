@@ -1,7 +1,8 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.api.routes_agent import router as agent_router
 from app.api.routes_business import router as business_router
@@ -10,6 +11,7 @@ from app.api.routes_evals import router as evals_router
 from app.api.routes_health import router as health_router
 from app.api.routes_runs import router as runs_router
 from app.core.config import get_settings
+from app.core.errors import AppError, internal_error, unsupported_document_type
 from app.db.session import create_database_tables
 from app.observability.tracing import configure_logging
 
@@ -28,6 +30,42 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(AppError)
+async def handle_app_error(_: Request, error: AppError) -> JSONResponse:
+    return JSONResponse(
+        status_code=error.status_code,
+        content=error.to_response(),
+    )
+
+
+@app.exception_handler(ValueError)
+async def handle_value_error(_: Request, error: ValueError) -> JSONResponse:
+    app_error = (
+        unsupported_document_type(str(error))
+        if "Unsupported document type" in str(error)
+        else AppError(
+            code="validation_error",
+            message=str(error),
+            status_code=422,
+        )
+    )
+    return JSONResponse(
+        status_code=app_error.status_code,
+        content=app_error.to_response(),
+    )
+
+
+@app.exception_handler(Exception)
+async def handle_uncaught_error(_: Request, error: Exception) -> JSONResponse:
+    app_error = internal_error()
+    return JSONResponse(
+        status_code=app_error.status_code,
+        content=app_error.to_response(),
+    )
+
+
 app.include_router(health_router)
 app.include_router(runs_router)
 app.include_router(documents_router)
