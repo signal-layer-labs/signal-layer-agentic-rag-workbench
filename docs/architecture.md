@@ -64,6 +64,21 @@ provider. The provider only transforms the existing trace into a readable
 response. It does not choose tools or trigger additional retrieval or business
 queries.
 
+## MCP exposure flow
+
+```text
+MCP client
+  → MCP server
+  → approved tool wrapper
+  → existing service layer
+  → PostgreSQL / ChromaDB
+  → structured MCP response
+```
+
+The MCP wrapper layer reuses the same deterministic business and orchestration
+services used by the HTTP API. It does not expose raw SQL, shell execution, or
+arbitrary write operations.
+
 ## Layers
 
 - API routes define HTTP contracts and status handling.

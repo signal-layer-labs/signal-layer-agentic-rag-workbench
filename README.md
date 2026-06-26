@@ -5,8 +5,9 @@ auditable AI responses.
 
 The current version provides traceable agent runs, raw-text document retrieval,
 deterministic orchestration, controlled response generation, and deterministic
-tools for querying structured business data. PostgreSQL stores business records
-and audit events while ChromaDB stores document chunks.
+tools for querying structured business data, plus an MCP server foundation.
+PostgreSQL stores business records and audit events while ChromaDB stores
+document chunks.
 
 ## Why this exists
 
@@ -248,6 +249,26 @@ These endpoints expose deterministic local tools. They do not select or invoke
 tools autonomously. When `run_id` is supplied, the input, output, status, and
 latency are recorded in `tool_calls`.
 
+## MCP server foundation
+
+Run the local stdio MCP server:
+
+```bash
+python -m app.mcp.server
+```
+
+The MCP server exposes these approved tools:
+
+* `query_customers`
+* `summarize_sales`
+* `run_traceable_workflow`
+
+`query_customers` and `summarize_sales` are deterministic read-only wrappers
+around the existing service layer. `run_traceable_workflow` reuses the existing
+deterministic orchestration path and creates a traceable run with the same
+`agent_runs`, `retrieval_events`, and `tool_calls` behavior used by the HTTP
+API. This MCP foundation does not add autonomous LLM tool selection.
+
 ## Quality checks
 
 ```bash
@@ -260,7 +281,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 29 tests passing
+* Pytest: 51 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
@@ -272,9 +293,8 @@ can optionally generate a final response from the recorded trace through a
 controlled provider abstraction. It does not parse files or perform autonomous
 LLM tool selection.
 
-Future phases will add document parsing, agent tools, MCP server exposure, real
-provider hardening, structured output, evals, and further cost and latency
-tracking.
+Future phases will add document parsing, agent tools, real provider hardening,
+structured output, evals, and further cost and latency tracking.
 
 ## License
 

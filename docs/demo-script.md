@@ -108,3 +108,20 @@ curl -X POST http://localhost:8000/agent/run \
 This response includes the same deterministic trace plus a generated
 human-readable response produced from that trace. The default provider is the
 local mock implementation.
+
+12. Run the local MCP server:
+
+```bash
+python -m app.mcp.server
+```
+
+Expose the deterministic MCP tools:
+
+```text
+query_customers
+summarize_sales
+run_traceable_workflow
+```
+
+The MCP server uses stdio transport and routes each approved tool through the
+existing service layer.

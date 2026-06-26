@@ -11,7 +11,12 @@ Potential modules for later phases include:
 - evals
 - autonomous tool selection
 - Agno-based orchestration
-- an MCP server exposing local tools
+- remote MCP transport
+- auth/permissioning
+- tool allowlist policies
+- structured error semantics
+- timeouts and budgets
+- richer observability for MCP calls
 - MCP server exposure
 - streaming execution traces
 - richer error recovery
