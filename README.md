@@ -297,6 +297,27 @@ deterministic orchestration path and creates a traceable run with the same
 `agent_runs`, `retrieval_events`, and `tool_calls` behavior used by the HTTP
 API. This MCP foundation does not add autonomous LLM tool selection.
 
+## RAG evaluation foundation
+
+Run the built-in deterministic eval suite:
+
+```bash
+python scripts/run_evals.py
+```
+
+Or trigger the same suite through the API:
+
+```bash
+curl -X POST http://localhost:8000/evals/run
+```
+
+The eval flow loads golden cases, ingests their documents through the existing
+chunking and retrieval path, runs the deterministic orchestration workflow, and
+scores retrieval, response, and trace behavior with local deterministic checks.
+It does not use LLM-as-judge, RAGAS-style metrics, or external eval services.
+The built-in eval runner is intended for local and demo use and ingests the
+built-in eval documents into the local retrieval/vector store.
+
 ## Quality checks
 
 ```bash
@@ -309,7 +330,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 64 tests passing
+* Pytest: 76 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
@@ -325,8 +346,9 @@ Future phases will add remote MCP transport, auth and permissioning, tool
 allowlist policies, structured error semantics, timeouts and budgets, richer
 observability for MCP calls, batch ingestion, persistent upload storage,
 advanced Docling extraction, Crawl4AI and Textract ingestion, background
-ingestion workflows, file provenance and versioning, and further cost and latency
-tracking.
+ingestion workflows, file provenance and versioning, LLM-as-judge experiments,
+RAGAS-style metrics, dataset-driven evals, regression thresholds, CI eval
+gates, eval history persistence, and further cost and latency tracking.
 
 ## License
 

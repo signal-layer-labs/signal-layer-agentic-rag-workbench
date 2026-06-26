@@ -16,7 +16,12 @@ Potential modules for later phases include:
 - real provider hardening
 - streaming responses
 - structured output
-- evals
+- LLM-as-judge experiments
+- RAGAS-style metrics
+- dataset-driven evals
+- regression thresholds
+- CI eval gate
+- eval history persistence
 - autonomous tool selection
 - Agno-based orchestration
 - remote MCP transport

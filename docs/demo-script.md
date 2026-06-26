@@ -149,3 +149,23 @@ run_traceable_workflow
 
 The MCP server uses stdio transport and routes each approved tool through the
 existing service layer.
+
+16. Run the deterministic eval script:
+
+```bash
+python scripts/run_evals.py
+```
+
+This prints a concise pass/fail report for the built-in retrieval and
+orchestration cases.
+It is intended for local and demo use and ingests the built-in eval documents
+into the local retrieval/vector store.
+
+17. Run the same eval suite through the API:
+
+```bash
+curl -X POST http://localhost:8000/evals/run
+```
+
+Review the `total`, `passed`, `failed`, and per-case metric results to confirm
+retrieval, response generation, and trace behavior remain stable.
