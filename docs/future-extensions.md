@@ -29,12 +29,12 @@ Potential modules for later phases include:
 - production secrets management
 - rate limiting
 - distributed tracing
+- advanced timeout enforcement
+- request cancellation
 - persistent audit exports
 - remote MCP transport security
 - real provider retry policies
 - tool allowlist policies
-- structured error semantics
-- timeouts and budgets
 - richer observability for MCP calls
 - streaming execution traces
 - richer error recovery

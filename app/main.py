@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes_agent import router as agent_router
@@ -11,7 +11,13 @@ from app.api.routes_evals import router as evals_router
 from app.api.routes_health import router as health_router
 from app.api.routes_runs import router as runs_router
 from app.core.config import get_settings
-from app.core.errors import AppError, internal_error, unsupported_document_type
+from app.core.errors import (
+    AppError,
+    internal_error,
+    not_found,
+    unsupported_document_type,
+    validation_error,
+)
 from app.db.session import create_database_tables
 from app.observability.tracing import configure_logging
 
@@ -45,12 +51,31 @@ async def handle_value_error(_: Request, error: ValueError) -> JSONResponse:
     app_error = (
         unsupported_document_type(str(error))
         if "Unsupported document type" in str(error)
-        else AppError(
-            code="validation_error",
-            message=str(error),
-            status_code=422,
-        )
+        else validation_error(str(error))
     )
+    return JSONResponse(
+        status_code=app_error.status_code,
+        content=app_error.to_response(),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def handle_http_exception(_: Request, error: HTTPException) -> JSONResponse:
+    message = (
+        error.detail if isinstance(error.detail, str) else "The request failed."
+    )
+    if error.status_code == 404:
+        app_error = not_found(message)
+    elif error.status_code == 415:
+        app_error = unsupported_document_type(message)
+    elif error.status_code == 422:
+        app_error = validation_error(message)
+    else:
+        app_error = AppError(
+            code="http_error",
+            message=message,
+            status_code=error.status_code,
+        )
     return JSONResponse(
         status_code=app_error.status_code,
         content=app_error.to_response(),

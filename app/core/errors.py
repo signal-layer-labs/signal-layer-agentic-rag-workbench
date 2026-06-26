@@ -50,6 +50,19 @@ def unsupported_document_type(
     )
 
 
+def not_found(
+    message: str,
+    *,
+    details: dict[str, object] | None = None,
+) -> AppError:
+    return AppError(
+        code="not_found",
+        message=message,
+        status_code=404,
+        details=details or {},
+    )
+
+
 def provider_not_configured(
     message: str,
     *,

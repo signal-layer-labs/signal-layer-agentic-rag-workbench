@@ -330,6 +330,9 @@ This phase adds framework-level hardening for structured errors, normalized
 provider failures, controlled MCP error envelopes, latency measurement helpers,
 and explicit operational budgets. It improves local and service-layer safety,
 but it is not a full auth, secrets-management, or enterprise security layer.
+The timeout-related settings are configuration fields for operational policy and
+future enforcement work. This phase applies simple guardrails where safe, but
+it does not add full async cancellation or distributed timeout enforcement.
 
 Structured error responses use this shape:
 
@@ -369,7 +372,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 92 tests passing
+* Pytest: 94 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
@@ -381,8 +384,8 @@ can optionally generate a final response from the recorded trace through a
 controlled provider abstraction. It does not parse files or perform autonomous
 LLM tool selection.
 
-Future phases will add remote MCP transport, auth and permissioning, tool
-allowlist policies, structured error semantics, timeouts and budgets, richer
+Future phases will add advanced timeout enforcement, request cancellation,
+remote MCP transport, auth and permissioning, tool allowlist policies, richer
 observability for MCP calls, batch ingestion, persistent upload storage,
 advanced Docling extraction, Crawl4AI and Textract ingestion, background
 ingestion workflows, file provenance and versioning, LLM-as-judge experiments,

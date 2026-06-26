@@ -68,4 +68,11 @@ def test_get_missing_run(client: TestClient) -> None:
     response = client.get(f"/runs/{uuid4()}")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Agent run not found."}
+    assert response.json() == {
+        "error": {
+            "code": "not_found",
+            "message": "Agent run not found.",
+            "retryable": False,
+            "details": {},
+        }
+    }

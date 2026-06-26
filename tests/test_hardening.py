@@ -13,6 +13,7 @@ from app.providers.factory import create_llm_provider, get_llm_provider
 from app.rag.retrieval import RetrievalService, get_retrieval_service
 from app.schemas.evals import EvalCase
 from app.services.agent_orchestrator import get_agent_orchestrator
+from app.services.run_service import get_run_service
 
 
 class StubSearchService:
@@ -46,6 +47,14 @@ class DummyVectorStore:
 class StubOrchestrator:
     def run(self, request: Any) -> Any:
         raise validation_error("stubbed app error")
+
+
+class StubRunService:
+    def create_run(self, business_question: str) -> Any:
+        raise NotImplementedError
+
+    def get_run(self, run_id: Any) -> None:
+        return None
 
 
 def clear_settings_caches() -> None:
@@ -90,6 +99,24 @@ def test_fastapi_app_error_handler_returns_structured_error() -> None:
     }
 
 
+def test_http_exception_404_is_normalized_to_structured_error() -> None:
+    app.dependency_overrides[get_run_service] = lambda: StubRunService()
+    client = TestClient(app)
+
+    response = client.get("/runs/00000000-0000-0000-0000-000000000001")
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 404
+    assert response.json() == {
+        "error": {
+            "code": "not_found",
+            "message": "Agent run not found.",
+            "retryable": False,
+            "details": {},
+        }
+    }
+
+
 def test_known_validation_value_error_returns_controlled_error_shape() -> None:
     app.dependency_overrides[get_retrieval_service] = lambda: StubSearchService(
         ValueError("Known validation issue.")
@@ -107,6 +134,25 @@ def test_known_validation_value_error_returns_controlled_error_shape() -> None:
         "error": {
             "code": "validation_error",
             "message": "Known validation issue.",
+            "retryable": False,
+            "details": {},
+        }
+    }
+
+
+def test_http_exception_415_is_normalized_to_structured_error() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/documents/parse",
+        files={"file": ("policy.csv", b"a,b,c\n1,2,3\n", "text/csv")},
+    )
+
+    assert response.status_code == 415
+    assert response.json() == {
+        "error": {
+            "code": "unsupported_document_type",
+            "message": "Unsupported document type for parsing.",
             "retryable": False,
             "details": {},
         }
