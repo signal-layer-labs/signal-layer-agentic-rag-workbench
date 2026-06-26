@@ -4,6 +4,12 @@ The API creates durable agent runs, indexes raw document text in ChromaDB, and
 records trace events in PostgreSQL. The current orchestration path is explicit
 and deterministic. It does not use autonomous LLM-based tool selection.
 
+## Presentation summary
+
+This workbench is designed to be explainable in demos, reviews, and technical
+walkthroughs. The system favors visible service boundaries, trace data, and
+controlled tool exposure over hidden autonomy or deployment complexity.
+
 ## Document retrieval flow
 
 ```text
@@ -132,16 +138,16 @@ execution model.
 
 ## Layers
 
-- API routes define HTTP contracts and status handling.
-- Schemas validate input and shape responses.
-- Services coordinate run, ingestion, retrieval, and orchestration behavior.
-- Repositories isolate persistence operations.
-- SQLAlchemy models define PostgreSQL records and relationships.
-- The RAG layer provides deterministic chunking, mock embeddings, and the
+* API routes define HTTP contracts and status handling.
+* Schemas validate input and shape responses.
+* Services coordinate run, ingestion, retrieval, and orchestration behavior.
+* Repositories isolate persistence operations.
+* SQLAlchemy models define PostgreSQL records and relationships.
+* The RAG layer provides deterministic chunking, mock embeddings, and the
   ChromaDB boundary.
-- Local business tools expose approved customer and sales filters without
+* Local business tools expose approved customer and sales filters without
   accepting raw SQL.
-- Observability provides a home for logging and future trace instrumentation.
+* Observability provides a home for logging and future trace instrumentation.
 
 Retrieval events are written by `POST /runs/{run_id}/retrieve` and by
 `POST /agent/run` when a retrieval query is provided. Business tool calls with

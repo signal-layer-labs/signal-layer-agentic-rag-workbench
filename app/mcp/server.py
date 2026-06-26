@@ -1,3 +1,4 @@
+from importlib import import_module
 from typing import Any
 
 from app.mcp.schemas import MCPErrorEnvelope
@@ -8,25 +9,21 @@ from app.mcp.tools import (
     summarize_sales,
 )
 
-try:
-    from mcp.server.fastmcp import FastMCP  # type: ignore[import-not-found]
-except ImportError as exc:  # pragma: no cover - exercised by runtime only
-    FastMCP = None
-    MCP_IMPORT_ERROR: ImportError | None = exc
-else:
-    MCP_IMPORT_ERROR = None
+
+def load_fastmcp() -> Any:
+    try:
+        module = import_module("mcp.server.fastmcp")
+    except ImportError as error:  # pragma: no cover - exercised by runtime only
+        raise RuntimeError(
+            "MCP server support requires the mcp package to be installed."
+        ) from error
+    return module.FastMCP
 
 
 def create_mcp_server() -> Any:
-    if FastMCP is None:
-        raise RuntimeError(
-            "The MCP SDK is not installed. Add the 'mcp' dependency to run the "
-            "local MCP server entrypoint."
-        ) from MCP_IMPORT_ERROR
-
+    FastMCP = load_fastmcp()
     server = FastMCP("signal-layer-agentic-rag-workbench")
 
-    @server.tool()  # type: ignore[untyped-decorator]
     def mcp_query_customers(
         segment: str | None = None,
         region: str | None = None,
@@ -53,8 +50,8 @@ def create_mcp_server() -> Any:
         if isinstance(result, list):
             return [item.model_dump(mode="json") for item in result]
         return result.model_dump(mode="json")
+    server.tool()(mcp_query_customers)
 
-    @server.tool()  # type: ignore[untyped-decorator]
     def mcp_summarize_sales(
         region: str | None = None,
         channel: str | None = None,
@@ -79,8 +76,8 @@ def create_mcp_server() -> Any:
         if isinstance(result, MCPErrorEnvelope):
             return result.model_dump(mode="json")
         return result.model_dump(mode="json")
+    server.tool()(mcp_summarize_sales)
 
-    @server.tool()  # type: ignore[untyped-decorator]
     def mcp_run_traceable_workflow(
         business_question: str,
         retrieval_query: str | None = None,
@@ -110,6 +107,7 @@ def create_mcp_server() -> Any:
         if isinstance(result, MCPErrorEnvelope):
             return result.model_dump(mode="json")
         return result.model_dump(mode="json")
+    server.tool()(mcp_run_traceable_workflow)
 
     return server
 

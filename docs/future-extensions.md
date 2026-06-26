@@ -1,56 +1,59 @@
 # Future extensions
 
-Potential modules for later phases include:
+These are directional extension points, not dependencies of the current local
+workbench foundation.
 
-- real embedding providers
-- current MCP support is a local stdio foundation only
-- Docling for document parsing
-- Crawl4AI for web scraping
-- batch ingestion
-- persistent upload storage
-- Docling advanced table/image extraction
-- Textract/S3 ingestion
-- background ingestion workflows
-- file provenance and versioning
-- richer metadata extraction
-- real provider hardening
-- streaming responses
-- structured output
-- LLM-as-judge experiments
-- RAGAS-style metrics
-- dataset-driven evals
-- regression thresholds
-- CI eval gate
-- eval history persistence
-- autonomous tool selection
-- Agno-based orchestration
-- Agno teams
-- Agno workflows
-- AgentOS deployment
-- persistent memory
-- human-in-the-loop
-- richer guardrails
-- real model-backed Agno execution
-- agent eval regression suite
-- tool approval policies
-- remote MCP transport
-- auth/permissioning
-- production secrets management
-- rate limiting
-- distributed tracing
-- advanced timeout enforcement
-- request cancellation
-- persistent audit exports
-- remote MCP transport security
-- real provider retry policies
-- tool allowlist policies
-- richer observability for MCP calls
-- streaming execution traces
-- richer error recovery
-- safer permissioning and allowlists for tools
-- cost and latency observability
-- cost tracking
-- queue-based execution
+## Retrieval and ingestion
 
-These are directional extension points, not dependencies of the current
-backend foundation.
+* real embedding providers
+* richer document extraction
+* Docling advanced table and image extraction
+* Crawl4AI ingestion
+* Textract-backed ingestion
+* batch ingestion
+* persistent upload storage
+* file provenance and versioning
+
+## Providers and response generation
+
+* real provider integration
+* real provider hardening
+* structured output
+* streaming responses
+* real provider retry policies
+
+## Evaluation
+
+* dataset-driven evals
+* LLM-as-judge experiments
+* RAGAS-style metrics
+* regression thresholds
+* CI eval gate
+* eval history persistence
+* agent eval regression suite
+
+## Agents and tools
+
+* real model-backed Agno execution
+* Agno teams
+* Agno workflows
+* AgentOS deployment
+* persistent memory
+* human-in-the-loop
+* richer guardrails
+* tool approval and allowlist policies
+
+## Operations and security
+
+* remote MCP transport
+* remote MCP transport security
+* auth and permissioning
+* production secrets management
+* rate limiting
+* distributed tracing
+* advanced timeout enforcement
+* request cancellation
+* persistent audit exports
+* cost and latency observability
+* queue-based execution
+* frontend or dashboard work as optional future work
