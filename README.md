@@ -3,12 +3,12 @@
 A trace-first agentic RAG workbench for business data, documents, parsing,
 retrieval, deterministic tools, orchestration, controlled response generation,
 MCP tool exposure, deterministic evals, production hardening, and an optional
-Agno agent adapter.
+Agno adapter.
 
 ## What this is
 
 This project is a local engineering workbench for building and inspecting
-traceable AI-assisted workflows without hiding the execution path.
+traceable AI-assisted workflows.
 
 It combines:
 
@@ -19,11 +19,10 @@ It combines:
 * controlled response generation
 * local MCP tool exposure
 * deterministic evals
-* production-hardening primitives such as budgets, timing, and structured
-  errors
+* operational hardening with budgets, timing, and structured errors
 
-The current implementation stores business records and audit events in
-PostgreSQL and document chunks in ChromaDB.
+PostgreSQL stores business records and audit events. ChromaDB stores document
+chunks and retrieval data.
 
 ## Why this exists
 
@@ -33,7 +32,7 @@ Most AI demos stop at:
 prompt → response
 ```
 
-This project explores a more production-oriented pattern:
+This project explores a more inspectable pattern:
 
 ```text
 business question
@@ -46,7 +45,7 @@ business question
 ```
 
 The goal is to make agentic systems easier to inspect, test, and extend before
-adding broader autonomy or real external provider execution.
+introducing broader autonomy or real external provider execution.
 
 ## Current capabilities
 
@@ -60,36 +59,24 @@ adding broader autonomy or real external provider execution.
 * Controlled response generation through `generate_response=true`
 * Provider abstraction with deterministic mock behavior by default
 * Local stdio MCP server foundation with approved tool wrappers
-* Deterministic eval runner through `POST /evals/run` and `scripts/run_evals.py`
-* Structured operational hardening with budgets, timing, and normalized errors
+* Deterministic evaluation through `POST /evals/run` and `scripts/run_evals.py`
+* Structured production hardening with budgets, timing, and normalized errors
 * Optional Agno adapter path through `POST /agent/agno/run`
 
 ## Architecture diagram
 
 ```mermaid
 flowchart TD
-    A[Business question]
-    B[Traceable run]
-    C[Document parsing / ingestion]
-    D[ChromaDB retrieval]
-    E[PostgreSQL business tools]
-    F[Retrieval events + tool calls]
-    G[Deterministic orchestration]
-    H[Controlled response generation]
-    I[MCP tool boundary]
-    J[Optional Agno adapter]
-    K[Deterministic evals + structured errors]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
+    A[Question] --> B[Traceable run]
+    B --> C[Parse and ingest]
+    C --> D[Chroma retrieval]
+    D --> E[Business tools]
+    E --> F[Events and tool calls]
+    F --> G[Deterministic orchestration]
+    G --> H[Controlled response]
+    H --> I[MCP boundary]
+    I --> J[Optional Agno adapter]
+    J --> K[Evals and errors]
 ```
 
 For a deeper breakdown of system boundaries and flows, see
@@ -154,35 +141,37 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `MAX_TOOL_CALLS_PER_RUN`: maximum allowed tool calls in one orchestration run.
 * `MAX_RETRIEVAL_RESULTS`: maximum retrieval results returned by one query.
 * `MAX_EVAL_CASES`: maximum eval cases allowed in one eval run.
-* `AGNO_ENABLED`: enables the optional Agno agent adapter layer.
-* `AGNO_MODEL`: configured model label for the Agno adapter path.
+* `AGNO_ENABLED`: enables the optional Agno adapter layer.
+* `AGNO_MODEL`: configured model label for the Agno path.
 * `AGNO_ALLOW_REAL_PROVIDER`: keeps real model-backed Agno execution disabled by default.
 
 ## Demo scenario
 
-The recommended local walkthrough is the “Commercial policy and online sales
-review” scenario.
+The recommended local walkthrough is “Commercial policy and online sales
+review.”
 
-It demonstrates how to:
-
-* parse and ingest a sample Markdown policy document
-* search for discount approval rules
-* run deterministic orchestration
-* generate a controlled response from the trace
-* run the optional Agno adapter path
-* run deterministic evals
-* inspect a structured error response
-
-Start with the bundled sample file:
+Use the bundled sample file:
 
 * [samples/commercial_policy.md](samples/commercial_policy.md)
 
-For the client-facing walkthrough, see [docs/demo.md](docs/demo.md). For the
-step-by-step command list, see [docs/demo-script.md](docs/demo-script.md).
+For a client-friendly overview, see [docs/demo.md](docs/demo.md). For the
+step-by-step command walkthrough, see [docs/demo-script.md](docs/demo-script.md).
 
 ### Demo quick flow
 
-Parse and ingest the sample document:
+1. Start services:
+
+```bash
+docker compose up --build
+```
+
+2. Seed business data:
+
+```bash
+docker compose exec api python scripts/seed_business_data.py
+```
+
+3. Parse and ingest the sample document:
 
 ```bash
 curl -X POST http://localhost:8000/documents/parse-ingest \
@@ -190,64 +179,66 @@ curl -X POST http://localhost:8000/documents/parse-ingest \
   -F 'metadata={"department":"growth","document_type":"policy"}'
 ```
 
-Search for the relevant policy rule:
+4. Search for discount approval rules:
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
   -H "Content-Type: application/json" \
   -d '{
-    "query":"discount approval rules",
-    "limit":5,
-    "where":{"department":"growth"}
+    "query": "discount approval rules",
+    "limit": 5,
+    "where": {
+      "department": "growth"
+    }
   }'
 ```
 
-Run deterministic orchestration:
+5. Run deterministic orchestration:
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise"
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise"
   }'
 ```
 
-Run controlled response generation:
+6. Run controlled response generation:
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise",
-    "generate_response":true
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true
   }'
 ```
 
-Run the optional Agno adapter path:
+7. Run the optional Agno adapter path:
 
 ```bash
 curl -X POST http://localhost:8000/agent/agno/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and retrieve relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise",
-    "generate_response":true,
-    "use_agno_agent":true
+    "business_question": "Analyze online sales performance and retrieve relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true,
+    "use_agno_agent": true
   }'
 ```
 
-Run the deterministic eval suite:
+8. Run deterministic evals:
 
 ```bash
 python scripts/run_evals.py
@@ -256,24 +247,18 @@ python scripts/run_evals.py
 The built-in eval runner is intended for local and demo use. It ingests
 built-in eval documents into the local retrieval/vector store.
 
-Example structured error check:
+9. Trigger a structured error example:
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
   -H "Content-Type: application/json" \
-  -d '{"query":"discount approval rules","limit":20}'
+  -d '{
+    "query": "discount approval rules",
+    "limit": 20
+  }'
 ```
 
-## Document retrieval
-
-Document parsing supports:
-
-* `.txt`
-* `.md`
-* `.markdown`
-* `.pdf` as an optional reserved Docling parser path
-
-Uploaded files are parsed in memory and are not persisted in this phase.
+## Core API examples
 
 Ingest raw text:
 
@@ -316,112 +301,21 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
   }'
 ```
 
-When retrieval is linked to a run, the query, retrieved chunks, metadata, and
-distances are recorded in PostgreSQL as a retrieval event.
-
 Parse a document without ingesting it:
 
 ```bash
 curl -X POST http://localhost:8000/documents/parse \
-  -F 'file=@commercial_policy.md;type=text/markdown' \
+  -F 'file=@samples/commercial_policy.md;type=text/markdown' \
   -F 'metadata={"department":"growth"}'
 ```
 
-Parse and ingest a document through the existing chunking pipeline:
+Parse and ingest a document:
 
 ```bash
 curl -X POST http://localhost:8000/documents/parse-ingest \
-  -F 'file=@commercial_policy.md;type=text/markdown' \
+  -F 'file=@samples/commercial_policy.md;type=text/markdown' \
   -F 'metadata={"department":"growth"}'
 ```
-
-PDF parsing is reserved for the optional Docling parser path and fails clearly
-unless Docling extraction is wired in the environment.
-
-## Deterministic orchestration
-
-Run the explicit orchestration flow:
-
-```bash
-curl -X POST http://localhost:8000/agent/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query": "discount approval rules",
-    "sales_region": "east",
-    "sales_channel": "online",
-    "customer_segment": "enterprise"
-  }'
-```
-
-This endpoint creates a run, optionally retrieves document context, executes
-approved business tools with run-linked audit logging, and returns a
-deterministic trace summary. It does not use an LLM or select tools
-autonomously.
-
-To generate a final response from the recorded trace:
-
-```bash
-curl -X POST http://localhost:8000/agent/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query": "discount approval rules",
-    "sales_region": "east",
-    "sales_channel": "online",
-    "customer_segment": "enterprise",
-    "generate_response": true
-  }'
-```
-
-When `generate_response` is `true`, the API keeps the deterministic
-orchestration flow and then converts the resulting trace into a human-readable
-response through the provider abstraction. The default provider is the local
-deterministic mock implementation. This does not add autonomous tool selection
-or LLM-driven tool calling.
-
-## Agno agent layer foundation
-
-The deterministic `POST /agent/run` endpoint remains the reliability baseline.
-This phase adds `POST /agent/agno/run` as an optional controlled agent layer
-over approved allowlisted tools and the existing trace-first service flow.
-
-Run the Agno adapter endpoint:
-
-```bash
-curl -X POST http://localhost:8000/agent/agno/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "business_question":"Analyze online sales performance and retrieve relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise",
-    "generate_response":true,
-    "use_agno_agent":true
-  }'
-```
-
-Agent-facing allowlisted tools in this foundation are:
-
-* `retrieve_documents`
-* `query_customers`
-* `summarize_sales`
-
-The internal trace-first adapter path still reuses the existing
-`AgentOrchestrator`. `run_traceable_workflow` is internal adapter behavior and
-is not exposed as an unrestricted model-controlled tool.
-
-## Business data tools
-
-Seed the local fake customer, product, and sales dataset:
-
-```bash
-docker compose exec api python scripts/seed_business_data.py
-```
-
-The script replaces only the seeded business tables. It does not clear agent
-runs, tool calls, or retrieval events.
 
 Query customers:
 
@@ -435,18 +329,6 @@ curl -X POST http://localhost:8000/business/customers/query \
   }'
 ```
 
-Query sales:
-
-```bash
-curl -X POST http://localhost:8000/business/sales/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "run_id": "<run_id>",
-    "channel": "online",
-    "limit": 20
-  }'
-```
-
 Summarize sales:
 
 ```bash
@@ -454,15 +336,11 @@ curl -X POST http://localhost:8000/business/sales/summary \
   -H "Content-Type: application/json" \
   -d '{
     "run_id": "<run_id>",
-    "region": "east"
+    "channel": "online"
   }'
 ```
 
-These endpoints expose deterministic local tools. They do not select or invoke
-tools autonomously. When `run_id` is supplied, the input, output, status, and
-latency are recorded in `tool_calls`.
-
-## MCP server foundation
+## MCP server
 
 Run the local stdio MCP server:
 
@@ -470,17 +348,59 @@ Run the local stdio MCP server:
 python -m app.mcp.server
 ```
 
-The MCP server exposes these approved tools:
+It exposes these approved tools:
 
 * `query_customers`
 * `summarize_sales`
 * `run_traceable_workflow`
 
-`query_customers` and `summarize_sales` are deterministic read-only wrappers
-around the existing service layer. `run_traceable_workflow` reuses the existing
-deterministic orchestration path and creates a traceable run with the same
-`agent_runs`, `retrieval_events`, and `tool_calls` behavior used by the HTTP
-API. This MCP foundation does not add autonomous LLM tool selection.
+This is a local stdio foundation. It reuses the existing deterministic service
+layer and does not expose raw SQL, shell execution, or unrestricted tool use.
+
+## Agno adapter
+
+The deterministic `POST /agent/run` endpoint remains the reliability baseline.
+`POST /agent/agno/run` is an optional controlled adapter path over approved
+allowlisted tools and the existing trace-first flow.
+
+Agent-facing allowlisted tools in this foundation are:
+
+* `retrieve_documents`
+* `query_customers`
+* `summarize_sales`
+
+The internal trace-first adapter path still reuses the existing
+`AgentOrchestrator`. `run_traceable_workflow` remains internal adapter behavior
+and is not exposed as an unrestricted model-controlled tool.
+
+## RAG evaluation
+
+Run the built-in eval script:
+
+```bash
+python scripts/run_evals.py
+```
+
+Run the same eval suite through the API:
+
+```bash
+curl -X POST http://localhost:8000/evals/run
+```
+
+The evaluation flow is deterministic and intended for local validation and demo
+use.
+
+## Production hardening
+
+The current foundation includes:
+
+* normalized application errors
+* request, retrieval, and tool-call budgets
+* timing and latency capture
+* provider normalization
+* structured MCP error envelopes
+
+These features are designed to keep traces inspectable when failures occur.
 
 ## Quality gates
 
@@ -500,13 +420,18 @@ Current validation:
 
 ## Current scope
 
-This phase accepts raw text and supported local file parsing, uses
-deterministic mock embeddings, and provides allowlisted structured queries plus
-an explicit orchestration flow. It can optionally generate a final response
-from the recorded trace through a controlled provider abstraction, expose
-approved MCP tools, run deterministic evals, and support an optional controlled
-Agno adapter path. It does not perform unrestricted autonomous tool selection,
-real external provider execution by default, or cloud deployment work.
+This phase supports raw text and supported local file parsing, deterministic
+retrieval, allowlisted business tools, explicit orchestration, controlled
+response generation, local MCP exposure, deterministic evals, and a controlled
+optional Agno adapter path. It does not add unrestricted autonomous tool
+selection, cloud deployment, remote MCP transport, or real external provider
+execution by default.
+
+## Future extensions
+
+See [docs/future-extensions.md](docs/future-extensions.md) for grouped
+directional future work across retrieval, providers, evaluation, agent layers,
+and operations.
 
 ## License
 

@@ -14,13 +14,7 @@ docker compose up --build
 docker compose exec api python scripts/seed_business_data.py
 ```
 
-3. Check service health:
-
-```bash
-curl http://localhost:8000/health
-```
-
-4. Parse and ingest the sample policy document:
+3. Parse and ingest the sample policy document:
 
 ```bash
 curl -X POST http://localhost:8000/documents/parse-ingest \
@@ -28,122 +22,72 @@ curl -X POST http://localhost:8000/documents/parse-ingest \
   -F 'metadata={"department":"growth","document_type":"policy"}'
 ```
 
-5. Search indexed chunks for the approval rule:
+4. Search indexed chunks for the approval rule:
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
   -H "Content-Type: application/json" \
   -d '{
-    "query":"discount approval rules",
-    "limit":5,
-    "where":{"department":"growth"}
+    "query": "discount approval rules",
+    "limit": 5,
+    "where": {
+      "department": "growth"
+    }
   }'
 ```
 
-6. Create a run:
-
-```bash
-curl -X POST http://localhost:8000/runs \
-  -H "Content-Type: application/json" \
-  -d '{"business_question":"Analyze online sales performance and summarize related policy context."}'
-```
-
-7. Copy the returned run identifier and retrieve relevant chunks:
-
-```bash
-curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
-  -H "Content-Type: application/json" \
-  -d '{"query":"What discount approval rules are relevant?","limit":5}'
-```
-
-8. Retrieve the saved run:
-
-```bash
-curl http://localhost:8000/runs/<run_id>
-```
-
-9. Query customers using the run identifier:
-
-```bash
-curl -X POST http://localhost:8000/business/customers/query \
-  -H "Content-Type: application/json" \
-  -d '{"run_id":"<run_id>","segment":"enterprise","region":"east"}'
-```
-
-10. Summarize sales using the run identifier:
-
-```bash
-curl -X POST http://localhost:8000/business/sales/summary \
-  -H "Content-Type: application/json" \
-  -d '{"run_id":"<run_id>","channel":"online"}'
-```
-
-The resulting `tool_call_id` identifies the audit record showing which
-structured data tool was used, its approved filters, its output, and latency.
-
-11. Run the deterministic orchestration endpoint:
+5. Run the deterministic orchestration endpoint:
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise"
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise"
   }'
 ```
 
-This response returns a completed run, the explicit execution plan, any
-retrieval event identifier, any logged tool call identifiers, and a
-deterministic trace summary.
-
-12. Run orchestration with controlled response generation:
+6. Run orchestration with controlled response generation:
 
 ```bash
 curl -X POST http://localhost:8000/agent/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise",
-    "generate_response":true
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true
   }'
 ```
 
-This response includes the same deterministic trace plus a generated
-human-readable response produced from that trace. The default provider is the
-local mock implementation.
-
-13. Run the optional Agno adapter endpoint:
+7. Run the optional Agno adapter endpoint:
 
 ```bash
 curl -X POST http://localhost:8000/agent/agno/run \
   -H "Content-Type: application/json" \
   -d '{
-    "business_question":"Analyze online sales performance and retrieve relevant commercial policy context.",
-    "retrieval_query":"discount approval rules",
-    "sales_region":"east",
-    "sales_channel":"online",
-    "customer_segment":"enterprise",
-    "generate_response":true,
-    "use_agno_agent":true
+    "business_question": "Analyze online sales performance and retrieve relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true,
+    "use_agno_agent": true
   }'
 ```
 
-This keeps the existing trace-first flow as the source of truth while adding a
-controlled allowlisted agent adapter layer.
-
-14. Run the local MCP server:
+8. Run the local MCP server in a separate stdio process:
 
 ```bash
 python -m app.mcp.server
 ```
 
-Expose the deterministic MCP tools:
+Approved MCP tools:
 
 ```text
 query_customers
@@ -151,36 +95,28 @@ summarize_sales
 run_traceable_workflow
 ```
 
-The MCP server uses stdio transport and routes each approved tool through the
-existing service layer.
-
-15. Run the deterministic eval script:
+9. Run the deterministic eval script:
 
 ```bash
 python scripts/run_evals.py
 ```
 
-This prints a concise pass/fail report for the built-in retrieval and
-orchestration cases.
-It is intended for local and demo use and ingests the built-in eval documents
+This is intended for local and demo use and ingests built-in eval documents
 into the local retrieval/vector store.
 
-16. Run the same eval suite through the API:
+10. Run the same eval suite through the API:
 
 ```bash
 curl -X POST http://localhost:8000/evals/run
 ```
 
-Review the `total`, `passed`, `failed`, and per-case metric results to confirm
-retrieval, response generation, and trace behavior remain stable.
-
-17. Trigger a controlled budget error:
+11. Trigger a controlled budget error:
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
   -H "Content-Type: application/json" \
-  -d '{"query":"discount approval rules","limit":20}'
+  -d '{
+    "query": "discount approval rules",
+    "limit": 20
+  }'
 ```
-
-This returns a structured error response instead of a stack trace when the
-request exceeds the configured retrieval budget.

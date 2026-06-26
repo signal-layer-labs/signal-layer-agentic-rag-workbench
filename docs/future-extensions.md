@@ -1,6 +1,6 @@
 # Future extensions
 
-Potential modules for later phases include:
+## Retrieval and ingestion
 
 * real embedding providers
 * richer document extraction
@@ -10,18 +10,27 @@ Potential modules for later phases include:
 * batch ingestion
 * persistent upload storage
 * file provenance and versioning
-* richer metadata extraction
+
+## Providers and response generation
+
 * real provider integration
 * real provider hardening
 * structured output
 * streaming responses
+* real provider retry policies
+
+## Evaluation
+
 * dataset-driven evals
 * LLM-as-judge experiments
 * RAGAS-style metrics
 * regression thresholds
 * CI eval gate
 * eval history persistence
-* Agno-based orchestration
+* agent eval regression suite
+
+## Agents and tools
+
 * real model-backed Agno execution
 * Agno teams
 * Agno workflows
@@ -29,25 +38,22 @@ Potential modules for later phases include:
 * persistent memory
 * human-in-the-loop
 * richer guardrails
-* current MCP support is a local stdio foundation only
+* tool approval and allowlist policies
+
+## Operations and security
+
 * remote MCP transport
 * remote MCP transport security
 * auth and permissioning
-* safer permissioning and allowlists for tools
-* tool approval and allowlist policies
-* richer observability for MCP calls
-* distributed tracing
-* streaming execution traces
-* structured error recovery improvements
-* advanced timeout enforcement
-* request cancellation
 * production secrets management
 * rate limiting
+* distributed tracing
+* advanced timeout enforcement
+* request cancellation
 * persistent audit exports
 * cost and latency observability
-* cost tracking
 * queue-based execution
-* frontend or dashboard work as future optional work
+* frontend or dashboard work as optional future work
 
 These are directional extension points, not dependencies of the current local
 workbench foundation.

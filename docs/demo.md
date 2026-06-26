@@ -1,8 +1,8 @@
 # Demo overview
 
-This project is a local workbench for traceable document retrieval, business
-data access, deterministic orchestration, controlled response generation, and
-inspection-friendly AI workflow development.
+This project is a local workbench foundation for traceable document retrieval,
+business data access, deterministic orchestration, controlled response
+generation, and inspection-friendly AI workflow development.
 
 It is designed to show how a system can stay understandable while still
 supporting richer retrieval and tool-driven flows.
@@ -23,15 +23,15 @@ This workbench focuses on making those steps visible.
 
 ```mermaid
 flowchart TD
-    A[Business question]
+    A[Question]
     B[Traceable run]
-    C[Document parsing and ingestion]
+    C[Parse and ingest]
     D[Document retrieval]
-    E[Business data tools]
-    F[Deterministic orchestration]
-    G[Controlled response generation]
+    E[Business tools]
+    F[Orchestration]
+    G[Controlled response]
     H[Optional Agno adapter]
-    I[Deterministic evals and structured errors]
+    I[Evals and errors]
 
     A --> B --> C --> D --> E --> F --> G --> H --> I
 ```
@@ -73,6 +73,7 @@ It intentionally does not include:
 * authentication and permissioning
 * remote MCP transport
 * real provider-backed execution as the default path
+* real model-backed Agno execution
 * unrestricted autonomous tool selection
 
 ## Local demo scenario
