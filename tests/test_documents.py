@@ -5,6 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.db.models import AgentRun, RetrievalEvent
+from app.documents.markdown_parser import MarkdownParser
+from app.documents.service import DocumentParsingService
+from app.documents.text_parser import PlainTextParser
 from app.main import app
 from app.rag.chunking import TextChunker
 from app.rag.embeddings import MockEmbeddingProvider
@@ -303,3 +306,319 @@ def test_ingestion_rejects_content_that_produces_no_chunks(
         service.ingest("Policy", "policy.md", "   ", {})
 
     assert vector_store.records == []
+
+
+def test_text_parser_parses_utf8_text() -> None:
+    parsed = PlainTextParser().parse(
+        "commercial_policy.txt",
+        b"Discount approval rules require manager review.",
+        "text/plain",
+    )
+
+    assert parsed.title == "commercial_policy"
+    assert parsed.source == "commercial_policy.txt"
+    assert parsed.content == "Discount approval rules require manager review."
+    assert parsed.parser == "text"
+
+
+def test_text_parser_rejects_blank_content() -> None:
+    with pytest.raises(ValueError, match="Parsed document content cannot be blank"):
+        PlainTextParser().parse(
+            "commercial_policy.txt",
+            b"   ",
+            "text/plain",
+        )
+
+
+def test_text_parser_rejects_invalid_utf8() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Document content must be valid UTF-8 text.",
+    ):
+        PlainTextParser().parse(
+            "commercial_policy.txt",
+            b"\xff\xfe\xfd",
+            "text/plain",
+        )
+
+
+def test_markdown_parser_parses_markdown_text() -> None:
+    parsed = MarkdownParser().parse(
+        "commercial_policy.md",
+        b"# Commercial Policy\n\nDiscount approval rules apply.",
+        "text/markdown",
+    )
+
+    assert parsed.title == "commercial_policy"
+    assert parsed.parser == "markdown"
+    assert "# Commercial Policy" in parsed.content
+
+
+def test_markdown_parser_rejects_invalid_utf8() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Document content must be valid UTF-8 text.",
+    ):
+        MarkdownParser().parse(
+            "commercial_policy.md",
+            b"\xff\xfe\xfd",
+            "text/markdown",
+        )
+
+
+def test_parser_service_selects_parser_by_extension() -> None:
+    service = DocumentParsingService()
+
+    parsed = service.parse(
+        filename="commercial_policy.md",
+        content=b"# Commercial Policy\n\nDiscount approval rules apply.",
+        content_type="text/markdown",
+    )
+
+    assert parsed.parser == "markdown"
+    assert parsed.metadata["original_filename"] == "commercial_policy.md"
+
+
+def test_parser_service_rejects_unsupported_file_type() -> None:
+    service = DocumentParsingService()
+
+    with pytest.raises(ValueError, match="Unsupported document type for parsing"):
+        service.parse(
+            filename="commercial_policy.csv",
+            content=b"header,value",
+            content_type="text/csv",
+        )
+
+
+def test_parser_service_rejects_blank_parsed_content() -> None:
+    service = DocumentParsingService()
+
+    with pytest.raises(ValueError, match="Parsed document content cannot be blank"):
+        service.parse(
+            filename="commercial_policy.md",
+            content=b"   ",
+            content_type="text/markdown",
+        )
+
+
+def test_parse_document_returns_preview_and_metadata(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"# Commercial Policy\n\nDiscount approval rules apply.",
+                "text/markdown",
+            )
+        },
+        data={"metadata": '{"department":"growth"}'},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["title"] == "commercial_policy"
+    assert payload["source"] == "commercial_policy.md"
+    assert payload["parser"] == "markdown"
+    assert payload["content_type"] == "text/markdown"
+    assert payload["metadata"]["department"] == "growth"
+    assert payload["metadata"]["original_filename"] == "commercial_policy.md"
+
+
+def test_parse_ingest_reuses_ingestion_and_creates_chunks(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, vector_store, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse-ingest",
+        files={
+            "file": (
+                "commercial_policy.md",
+                (
+                    b"# Commercial Policy\n\nDiscount approval rules require "
+                    b"manager review for large concessions."
+                ),
+                "text/markdown",
+            )
+        },
+        data={"metadata": '{"department":"growth"}'},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "indexed"
+    assert payload["parser"] == "markdown"
+    assert payload["chunks_created"] == len(vector_store.records)
+    assert payload["chunks_created"] > 0
+
+
+def test_parser_metadata_is_preserved_in_indexed_chunks(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, vector_store, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse-ingest",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"# Commercial Policy\n\nDiscount approval rules apply.",
+                "text/markdown",
+            )
+        },
+        data={"metadata": '{"department":"growth"}'},
+    )
+
+    assert response.status_code == 200
+    assert vector_store.records[0][0].metadata["parser"] == "markdown"
+    assert (
+        vector_store.records[0][0].metadata["original_filename"]
+        == "commercial_policy.md"
+    )
+    assert vector_store.records[0][0].metadata["department"] == "growth"
+
+
+def test_malformed_metadata_is_rejected(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"# Commercial Policy\n\nDiscount approval rules apply.",
+                "text/markdown",
+            )
+        },
+        data={"metadata": '{"department":"growth"'},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Malformed metadata JSON."
+
+
+def test_blank_title_override_is_rejected(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"# Commercial Policy\n\nDiscount approval rules apply.",
+                "text/markdown",
+            )
+        },
+        data={"title": "   "},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Title override cannot be blank."
+
+
+def test_upload_over_size_limit_is_rejected() -> None:
+    service = DocumentParsingService(max_upload_bytes=10)
+
+    with pytest.raises(ValueError, match="Uploaded file exceeds the maximum"):
+        service.parse(
+            filename="commercial_policy.md",
+            content=b"01234567890",
+            content_type="text/markdown",
+        )
+
+
+def test_pdf_parser_behavior_is_clear_when_docling_is_unavailable() -> None:
+    service = DocumentParsingService()
+
+    with pytest.raises(
+        ValueError,
+        match="PDF parsing through Docling is not wired in this environment yet.",
+    ):
+        service.parse(
+            filename="commercial_policy.pdf",
+            content=b"%PDF-1.4",
+            content_type="application/pdf",
+        )
+
+
+def test_parse_rejects_invalid_utf8_text_upload(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.txt",
+                b"\xff\xfe\xfd",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Document content must be valid UTF-8 text."
+
+
+def test_parse_rejects_invalid_utf8_markdown_upload(
+    retrieval_context: tuple[
+        TestClient,
+        UUID,
+        InMemoryVectorStore,
+        InMemoryRetrievalEventRepository,
+    ],
+) -> None:
+    client, _, _, _ = retrieval_context
+
+    response = client.post(
+        "/documents/parse",
+        files={
+            "file": (
+                "commercial_policy.md",
+                b"\xff\xfe\xfd",
+                "text/markdown",
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Document content must be valid UTF-8 text."

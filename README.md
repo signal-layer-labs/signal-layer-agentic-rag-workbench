@@ -113,6 +113,15 @@ docker compose exec api python scripts/seed_business_data.py
 
 ## Document retrieval
 
+Document parsing supports:
+
+* `.txt`
+* `.md`
+* `.markdown`
+* `.pdf` as an optional reserved Docling parser path
+
+Uploaded files are parsed in memory and are not persisted in this phase.
+
 Ingest raw text:
 
 ```bash
@@ -156,6 +165,25 @@ curl -X POST http://localhost:8000/runs/<run_id>/retrieve \
 
 When retrieval is linked to a run, the query, retrieved chunks, metadata, and
 distances are recorded in PostgreSQL as a retrieval event.
+
+Parse a document without ingesting it:
+
+```bash
+curl -X POST http://localhost:8000/documents/parse \
+  -F 'file=@commercial_policy.md;type=text/markdown' \
+  -F 'metadata={"department":"growth"}'
+```
+
+Parse and ingest a document through the existing chunking pipeline:
+
+```bash
+curl -X POST http://localhost:8000/documents/parse-ingest \
+  -F 'file=@commercial_policy.md;type=text/markdown' \
+  -F 'metadata={"department":"growth"}'
+```
+
+PDF parsing is reserved for the optional Docling parser path and fails clearly
+unless Docling extraction is wired in the environment.
 
 ## Deterministic orchestration
 
@@ -281,7 +309,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 51 tests passing
+* Pytest: 64 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
@@ -295,8 +323,10 @@ LLM tool selection.
 
 Future phases will add remote MCP transport, auth and permissioning, tool
 allowlist policies, structured error semantics, timeouts and budgets, richer
-observability for MCP calls, Agno-based autonomous orchestration, Docling
-document parsing, and further cost and latency tracking.
+observability for MCP calls, batch ingestion, persistent upload storage,
+advanced Docling extraction, Crawl4AI and Textract ingestion, background
+ingestion workflows, file provenance and versioning, and further cost and latency
+tracking.
 
 ## License
 

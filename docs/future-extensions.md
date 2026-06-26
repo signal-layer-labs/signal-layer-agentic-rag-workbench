@@ -6,6 +6,13 @@ Potential modules for later phases include:
 - current MCP support is a local stdio foundation only
 - Docling for document parsing
 - Crawl4AI for web scraping
+- batch ingestion
+- persistent upload storage
+- Docling advanced table/image extraction
+- Textract/S3 ingestion
+- background ingestion workflows
+- file provenance and versioning
+- richer metadata extraction
 - real provider hardening
 - streaming responses
 - structured output

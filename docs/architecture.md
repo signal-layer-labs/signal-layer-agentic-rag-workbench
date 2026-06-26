@@ -7,7 +7,9 @@ and deterministic. It does not use autonomous LLM-based tool selection.
 ## Document retrieval flow
 
 ```text
-document content
+uploaded file
+  → parser selection
+  → normalized parsed text
   → chunking
   → mock embeddings
   → ChromaDB

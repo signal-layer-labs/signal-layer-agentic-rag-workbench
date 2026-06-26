@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     deepseek_api_key: str | None = None
     chunk_size: int = 800
     chunk_overlap: int = 120
+    max_document_upload_bytes: int = 5 * 1024 * 1024
 
     model_config = SettingsConfigDict(
         env_file=".env",
