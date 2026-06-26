@@ -23,6 +23,7 @@ class AgentRunRequest(BaseModel):
     sales_region: OptionalNonBlankText = None
     sales_channel: OptionalNonBlankText = None
     customer_segment: OptionalNonBlankText = None
+    generate_response: bool = False
 
 
 class ExecutionPlanStep(BaseModel):
@@ -40,6 +41,16 @@ class AgentTraceSummary(BaseModel):
     sales_summary: SalesSummary
 
 
+class GeneratedResponse(BaseModel):
+    content: str
+    provider: str
+    model: str
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    latency_ms: int | None = None
+
+
 class AgentRunResponse(BaseModel):
     run_id: UUID
     status: RunStatus
@@ -47,3 +58,4 @@ class AgentRunResponse(BaseModel):
     execution_plan: list[ExecutionPlanStep]
     trace: AgentTraceSummary
     summary: str
+    generated_response: GeneratedResponse | None = None

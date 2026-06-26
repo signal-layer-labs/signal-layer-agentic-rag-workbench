@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.db.models import AgentRun, Customer, RetrievalEvent, Sale, ToolCall
 from app.main import app
+from app.providers.mock_provider import MockLLMProvider
 from app.rag.retrieval import get_retrieval_service
 from app.rag.vector_store import SearchResult
 from app.schemas.business import SalesSummary
@@ -17,6 +18,7 @@ from app.services.agent_orchestrator import (
 )
 from app.services.business_service import BusinessService
 from app.services.business_tool_executor import BusinessToolExecutor
+from app.services.response_generator import ResponseGenerator
 from app.services.run_service import RunService
 
 
@@ -209,6 +211,7 @@ def agent_context() -> tuple[
             run_repository=run_repository,
             tool_call_repository=tool_call_repository,
         ),
+        response_generator=ResponseGenerator(MockLLMProvider()),
     )
 
     app.dependency_overrides[get_agent_orchestrator] = lambda: orchestrator
@@ -360,6 +363,7 @@ def test_agent_run_failure_sets_failed_status() -> None:
             run_repository=run_repository,
             tool_call_repository=tool_call_repository,
         ),
+        response_generator=ResponseGenerator(MockLLMProvider()),
     )
 
     app.dependency_overrides[get_agent_orchestrator] = lambda: orchestrator
@@ -420,3 +424,81 @@ def test_agent_run_response_is_deterministic_and_local(
         "top_region": "east",
         "top_channel": "online",
     }
+
+
+def test_agent_run_does_not_generate_response_by_default(
+    agent_context: tuple[
+        TestClient,
+        InMemoryAgentRunRepository,
+        InMemoryRetrievalEventRepository,
+        InMemoryToolCallRepository,
+    ],
+) -> None:
+    client, _, _, _ = agent_context
+
+    response = client.post(
+        "/agent/run",
+        json={"business_question": "Summarize current sales."},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["generated_response"] is None
+
+
+def test_agent_run_can_generate_response_from_trace(
+    agent_context: tuple[
+        TestClient,
+        InMemoryAgentRunRepository,
+        InMemoryRetrievalEventRepository,
+        InMemoryToolCallRepository,
+    ],
+) -> None:
+    client, _, _, tool_call_repository = agent_context
+
+    response = client.post(
+        "/agent/run",
+        json={
+            "business_question": "Analyze online sales performance.",
+            "retrieval_query": "discount approval rules",
+            "sales_region": "east",
+            "sales_channel": "online",
+            "customer_segment": "enterprise",
+            "generate_response": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["generated_response"]["provider"] == "mock"
+    assert payload["generated_response"]["model"] == "mock-trace-generator"
+    assert payload["generated_response"]["latency_ms"] == 0
+    assert "Documents retrieved: yes (1)" in payload["generated_response"]["content"]
+    assert "Tool calls recorded: 2" in payload["generated_response"]["content"]
+    assert len(tool_call_repository.tool_calls) == 2
+
+
+def test_generated_response_uses_trace_values(
+    agent_context: tuple[
+        TestClient,
+        InMemoryAgentRunRepository,
+        InMemoryRetrievalEventRepository,
+        InMemoryToolCallRepository,
+    ],
+) -> None:
+    client, _, _, _ = agent_context
+
+    response = client.post(
+        "/agent/run",
+        json={
+            "business_question": "Analyze online sales performance.",
+            "sales_region": "east",
+            "sales_channel": "online",
+            "generate_response": True,
+        },
+    )
+
+    assert response.status_code == 200
+    content = response.json()["generated_response"]["content"]
+    assert "Business question: Analyze online sales performance." in content
+    assert "Documents retrieved: no (0)" in content
+    assert "revenue=350.00" in content

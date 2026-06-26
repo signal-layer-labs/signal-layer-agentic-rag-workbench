@@ -48,6 +48,22 @@ business question
 `POST /agent/run` executes this plan directly. The steps are fixed in code and
 do not depend on autonomous reasoning or LLM-driven tool selection.
 
+## Response generation flow
+
+```text
+business question
+  → deterministic orchestration
+  → trace summary
+  → provider abstraction
+  → controlled generated response
+  → future autonomous agent layer
+```
+
+When `generate_response=true`, the completed trace is passed to the configured
+provider. The provider only transforms the existing trace into a readable
+response. It does not choose tools or trigger additional retrieval or business
+queries.
+
 ## Layers
 
 - API routes define HTTP contracts and status handling.

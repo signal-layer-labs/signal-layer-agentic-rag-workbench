@@ -4,9 +4,9 @@ A traceable agentic RAG workbench for business data, documents, tools, and
 auditable AI responses.
 
 The current version provides traceable agent runs, raw-text document retrieval,
-deterministic orchestration, and deterministic tools for querying structured
-business data. PostgreSQL stores business records and audit events while
-ChromaDB stores document chunks.
+deterministic orchestration, controlled response generation, and deterministic
+tools for querying structured business data. PostgreSQL stores business records
+and audit events while ChromaDB stores document chunks.
 
 ## Why this exists
 
@@ -80,6 +80,12 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `CHROMA_PORT`: ChromaDB port.
 * `CHROMA_COLLECTION`: ChromaDB collection name for document chunks.
 * `EMBEDDING_PROVIDER`: embedding provider name. The current implementation uses `mock`.
+* `LLM_PROVIDER`: response-generation provider. Defaults to `mock`.
+* `LLM_MODEL`: response-generation model name.
+* `LLM_API_KEY`: optional shared API key field for provider setup.
+* `OPENAI_API_KEY`: optional provider-specific API key.
+* `GEMINI_API_KEY`: optional provider-specific API key.
+* `DEEPSEEK_API_KEY`: optional provider-specific API key.
 * `CHUNK_SIZE`: maximum chunk size for raw text ingestion.
 * `CHUNK_OVERLAP`: overlap size between adjacent text chunks.
 
@@ -171,6 +177,27 @@ approved business tools with run-linked audit logging, and returns a
 deterministic trace summary. It does not use an LLM or select tools
 autonomously.
 
+To generate a final response from the recorded trace:
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question": "Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true
+  }'
+```
+
+When `generate_response` is `true`, the API keeps the deterministic
+orchestration flow and then converts the resulting trace into a human-readable
+response through the provider abstraction. The default provider is the local
+deterministic mock implementation. This does not add autonomous tool selection
+or LLM-driven tool calling.
+
 ## Business data tools
 
 Seed the local fake customer, product, and sales dataset:
@@ -241,11 +268,13 @@ Current validation:
 
 This phase accepts raw text only, uses deterministic mock embeddings, and
 provides allowlisted structured queries plus an explicit orchestration flow. It
-does not parse files, generate natural-language answers, or perform autonomous
+can optionally generate a final response from the recorded trace through a
+controlled provider abstraction. It does not parse files or perform autonomous
 LLM tool selection.
 
-Future phases will add real embedding providers, document parsing, agent tools,
-an MCP server, an LLM provider abstraction, and cost and latency tracking.
+Future phases will add document parsing, agent tools, MCP server exposure, real
+provider hardening, structured output, evals, and further cost and latency
+tracking.
 
 ## License
 
