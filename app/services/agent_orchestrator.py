@@ -21,11 +21,13 @@ from app.schemas.agent import (
     AgentRunResponse,
     AgentTraceSummary,
     ExecutionPlanStep,
+    GeneratedResponse,
     PlanStepStatus,
 )
 from app.schemas.business import CustomerSummary, SalesSummary
 from app.services.business_service import BusinessService
 from app.services.business_tool_executor import BusinessToolExecutor
+from app.services.response_generator import ResponseGenerator, get_response_generator
 from app.services.run_service import RunService
 from app.tools.business_tools import query_customers_tool, summarize_sales_tool
 
@@ -41,10 +43,12 @@ class AgentOrchestrator:
         run_service: RunService,
         retrieval_service: RetrievalService,
         business_executor: BusinessToolExecutor,
+        response_generator: ResponseGenerator,
     ) -> None:
         self.run_service = run_service
         self.retrieval_service = retrieval_service
         self.business_executor = business_executor
+        self.response_generator = response_generator
 
     def run(self, request: AgentRunRequest) -> AgentRunResponse:
         plan = self._build_plan()
@@ -135,6 +139,24 @@ class AgentOrchestrator:
             self.run_service.update_summary(run.id, TRACE_SUMMARY)
             completed_run = self.run_service.update_status(run.id, "completed")
             self._mark_completed(plan, "assemble_trace_summary")
+            trace = AgentTraceSummary(
+                retrieval_event_id=retrieval_event_id,
+                tool_call_ids=tool_call_ids,
+                documents_retrieved=documents_retrieved,
+                customers_returned=customers_returned,
+                sales_summary=SalesSummary.model_validate(sales_summary),
+            )
+            generated_response = None
+            if request.generate_response:
+                llm_response = self.response_generator.generate(
+                    business_question=request.business_question,
+                    execution_plan=plan,
+                    trace=trace,
+                    trace_summary=TRACE_SUMMARY,
+                )
+                generated_response = GeneratedResponse.model_validate(
+                    llm_response.model_dump()
+                )
 
             return AgentRunResponse(
                 run_id=run.id,
@@ -145,14 +167,9 @@ class AgentOrchestrator:
                 ),
                 business_question=request.business_question,
                 execution_plan=plan,
-                trace=AgentTraceSummary(
-                    retrieval_event_id=retrieval_event_id,
-                    tool_call_ids=tool_call_ids,
-                    documents_retrieved=documents_retrieved,
-                    customers_returned=customers_returned,
-                    sales_summary=SalesSummary.model_validate(sales_summary),
-                ),
+                trace=trace,
                 summary=TRACE_SUMMARY,
+                generated_response=generated_response,
             )
         except Exception:
             self.run_service.update_status(run.id, "failed")
@@ -213,6 +230,10 @@ def get_agent_orchestrator(
         RetrievalService,
         Depends(get_retrieval_service),
     ],
+    response_generator: Annotated[
+        ResponseGenerator,
+        Depends(get_response_generator),
+    ],
 ) -> AgentOrchestrator:
     run_service = RunService(
         repository=SqlAlchemyAgentRunRepository(session),
@@ -227,4 +248,5 @@ def get_agent_orchestrator(
         run_service=run_service,
         retrieval_service=retrieval_service,
         business_executor=business_executor,
+        response_generator=response_generator,
     )

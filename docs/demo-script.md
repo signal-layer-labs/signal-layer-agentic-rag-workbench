@@ -89,3 +89,22 @@ curl -X POST http://localhost:8000/agent/run \
 This response returns a completed run, the explicit execution plan, any
 retrieval event identifier, any logged tool call identifiers, and a
 deterministic trace summary.
+
+11. Run orchestration with controlled response generation:
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query":"discount approval rules",
+    "sales_region":"east",
+    "sales_channel":"online",
+    "customer_segment":"enterprise",
+    "generate_response":true
+  }'
+```
+
+This response includes the same deterministic trace plus a generated
+human-readable response produced from that trace. The default provider is the
+local mock implementation.
