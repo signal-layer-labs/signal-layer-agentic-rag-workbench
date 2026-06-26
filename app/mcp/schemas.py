@@ -100,3 +100,14 @@ class RunTraceableWorkflowInput(BaseModel):
             raise ValueError("business_question cannot be blank")
         self.business_question = self.business_question.strip()
         return self
+
+
+class MCPErrorBody(BaseModel):
+    code: str
+    message: str
+    retryable: bool = False
+    details: dict[str, object] = Field(default_factory=dict)
+
+
+class MCPErrorEnvelope(BaseModel):
+    error: MCPErrorBody

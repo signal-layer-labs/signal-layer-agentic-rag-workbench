@@ -2,6 +2,8 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from app.core.errors import AppError, orchestration_failed
+from app.core.timing import measure_time
 from app.providers.base import (
     LLMGenerationRequest,
     LLMGenerationResponse,
@@ -42,7 +44,19 @@ class ResponseGenerator:
             business_data_summary=trace,
             system_instruction=SYSTEM_INSTRUCTION,
         )
-        return self.provider.generate(request)
+        try:
+            with measure_time() as timer:
+                response = self.provider.generate(request)
+        except AppError:
+            raise
+        except Exception as error:
+            raise orchestration_failed(
+                "Response generation failed.",
+                details={"provider": type(self.provider).__name__},
+            ) from error
+        if response.latency_ms is None:
+            return response.model_copy(update={"latency_ms": timer.elapsed_ms})
+        return response
 
 
 def get_response_generator(

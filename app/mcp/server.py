@@ -1,6 +1,12 @@
 from typing import Any
 
-from app.mcp.tools import query_customers, run_traceable_workflow, summarize_sales
+from app.mcp.schemas import MCPErrorEnvelope
+from app.mcp.tools import (
+    execute_mcp_tool,
+    query_customers,
+    run_traceable_workflow,
+    summarize_sales,
+)
 
 try:
     from mcp.server.fastmcp import FastMCP  # type: ignore[import-not-found]
@@ -26,21 +32,27 @@ def create_mcp_server() -> Any:
         region: str | None = None,
         status: str | None = None,
         limit: int = 20,
-    ) -> list[dict[str, object]]:
+    ) -> list[dict[str, object]] | dict[str, object]:
         """Return structured customer matches using approved deterministic filters only.
 
         This tool reuses service-layer customer queries, does not accept raw SQL,
         and does not execute shell commands.
         """
-        results = query_customers(
-            {
-                "segment": segment,
-                "region": region,
-                "status": status,
-                "limit": limit,
-            }
+        result = execute_mcp_tool(
+            lambda: query_customers(
+                {
+                    "segment": segment,
+                    "region": region,
+                    "status": status,
+                    "limit": limit,
+                }
+            )
         )
-        return [result.model_dump(mode="json") for result in results]
+        if isinstance(result, MCPErrorEnvelope):
+            return result.model_dump(mode="json")
+        if isinstance(result, list):
+            return [item.model_dump(mode="json") for item in result]
+        return result.model_dump(mode="json")
 
     @server.tool()  # type: ignore[untyped-decorator]
     def mcp_summarize_sales(
@@ -54,15 +66,19 @@ def create_mcp_server() -> Any:
         This tool reuses existing summary logic, does not accept raw SQL, and
         does not execute shell commands.
         """
-        summary = summarize_sales(
-            {
-                "region": region,
-                "channel": channel,
-                "start_date": start_date,
-                "end_date": end_date,
-            }
+        result = execute_mcp_tool(
+            lambda: summarize_sales(
+                {
+                    "region": region,
+                    "channel": channel,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+            )
         )
-        return summary.model_dump(mode="json")
+        if isinstance(result, MCPErrorEnvelope):
+            return result.model_dump(mode="json")
+        return result.model_dump(mode="json")
 
     @server.tool()  # type: ignore[untyped-decorator]
     def mcp_run_traceable_workflow(
@@ -79,17 +95,21 @@ def create_mcp_server() -> Any:
         raw SQL, does not execute shell commands, and may record
         retrieval_events and tool_calls.
         """
-        response = run_traceable_workflow(
-            {
-                "business_question": business_question,
-                "retrieval_query": retrieval_query,
-                "sales_region": sales_region,
-                "sales_channel": sales_channel,
-                "customer_segment": customer_segment,
-                "generate_response": generate_response,
-            }
+        result = execute_mcp_tool(
+            lambda: run_traceable_workflow(
+                {
+                    "business_question": business_question,
+                    "retrieval_query": retrieval_query,
+                    "sales_region": sales_region,
+                    "sales_channel": sales_channel,
+                    "customer_segment": customer_segment,
+                    "generate_response": generate_response,
+                }
+            )
         )
-        return response.model_dump(mode="json")
+        if isinstance(result, MCPErrorEnvelope):
+            return result.model_dump(mode="json")
+        return result.model_dump(mode="json")
 
     return server
 

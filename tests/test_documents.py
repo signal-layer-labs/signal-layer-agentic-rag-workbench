@@ -520,7 +520,14 @@ def test_malformed_metadata_is_rejected(
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Malformed metadata JSON."
+    assert response.json() == {
+        "error": {
+            "code": "validation_error",
+            "message": "Malformed metadata JSON.",
+            "retryable": False,
+            "details": {},
+        }
+    }
 
 
 def test_blank_title_override_is_rejected(
@@ -546,7 +553,14 @@ def test_blank_title_override_is_rejected(
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Title override cannot be blank."
+    assert response.json() == {
+        "error": {
+            "code": "validation_error",
+            "message": "Title override cannot be blank.",
+            "retryable": False,
+            "details": {},
+        }
+    }
 
 
 def test_upload_over_size_limit_is_rejected() -> None:
@@ -596,7 +610,14 @@ def test_parse_rejects_invalid_utf8_text_upload(
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Document content must be valid UTF-8 text."
+    assert response.json() == {
+        "error": {
+            "code": "validation_error",
+            "message": "Document content must be valid UTF-8 text.",
+            "retryable": False,
+            "details": {},
+        }
+    }
 
 
 def test_parse_rejects_invalid_utf8_markdown_upload(
@@ -621,4 +642,11 @@ def test_parse_rejects_invalid_utf8_markdown_upload(
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Document content must be valid UTF-8 text."
+    assert response.json() == {
+        "error": {
+            "code": "validation_error",
+            "message": "Document content must be valid UTF-8 text.",
+            "retryable": False,
+            "details": {},
+        }
+    }

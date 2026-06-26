@@ -1,3 +1,4 @@
+from app.core.errors import provider_not_configured, provider_not_implemented
 from app.providers.base import LLMGenerationRequest, LLMGenerationResponse
 
 
@@ -11,9 +12,9 @@ class DeepSeekLLMProvider:
         request: LLMGenerationRequest,
     ) -> LLMGenerationResponse:
         if not self.api_key:
-            raise ValueError(
+            raise provider_not_configured(
                 "DEEPSEEK_API_KEY is required when LLM_PROVIDER=deepseek."
             )
-        raise NotImplementedError(
+        raise provider_not_implemented(
             "The DeepSeek provider skeleton is configured but not implemented yet."
         )

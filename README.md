@@ -4,10 +4,10 @@ A traceable agentic RAG workbench for business data, documents, tools, and
 auditable AI responses.
 
 The current version provides traceable agent runs, raw-text document retrieval,
-deterministic orchestration, controlled response generation, and deterministic
-tools for querying structured business data, plus an MCP server foundation.
-PostgreSQL stores business records and audit events while ChromaDB stores
-document chunks.
+document parsing, deterministic orchestration, controlled response generation,
+deterministic tools for querying structured business data, an MCP server
+foundation, deterministic evals, and auditable AI responses. PostgreSQL stores
+business records and audit events while ChromaDB stores document chunks.
 
 ## Why this exists
 
@@ -89,6 +89,12 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `DEEPSEEK_API_KEY`: optional provider-specific API key.
 * `CHUNK_SIZE`: maximum chunk size for raw text ingestion.
 * `CHUNK_OVERLAP`: overlap size between adjacent text chunks.
+* `REQUEST_TIMEOUT_SECONDS`: request-level operational timeout budget.
+* `TOOL_TIMEOUT_SECONDS`: per-tool operational timeout budget.
+* `LLM_TIMEOUT_SECONDS`: response-generation timeout budget.
+* `MAX_TOOL_CALLS_PER_RUN`: maximum allowed tool calls in one orchestration run.
+* `MAX_RETRIEVAL_RESULTS`: maximum retrieval results returned by one query.
+* `MAX_EVAL_CASES`: maximum eval cases allowed in one eval run.
 
 ## Docker Compose
 
@@ -318,6 +324,42 @@ It does not use LLM-as-judge, RAGAS-style metrics, or external eval services.
 The built-in eval runner is intended for local and demo use and ingests the
 built-in eval documents into the local retrieval/vector store.
 
+## Production hardening foundation
+
+This phase adds framework-level hardening for structured errors, normalized
+provider failures, controlled MCP error envelopes, latency measurement helpers,
+and explicit operational budgets. It improves local and service-layer safety,
+but it is not a full auth, secrets-management, or enterprise security layer.
+The timeout-related settings are configuration fields for operational policy and
+future enforcement work. This phase applies simple guardrails where safe, but
+it does not add full async cancellation or distributed timeout enforcement.
+
+Structured error responses use this shape:
+
+```json
+{
+  "error": {
+    "code": "budget_exceeded",
+    "message": "retrieval_results limit exceeds the configured maximum.",
+    "retryable": false,
+    "details": {
+      "resource": "retrieval_results",
+      "limit": 20,
+      "max_limit": 10
+    }
+  }
+}
+```
+
+Current operational limits:
+
+* `MAX_RETRIEVAL_RESULTS`: 10
+* `MAX_TOOL_CALLS_PER_RUN`: 10
+* `MAX_EVAL_CASES`: 25
+* `REQUEST_TIMEOUT_SECONDS`: 30
+* `TOOL_TIMEOUT_SECONDS`: 10
+* `LLM_TIMEOUT_SECONDS`: 30
+
 ## Quality checks
 
 ```bash
@@ -330,7 +372,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 76 tests passing
+* Pytest: 94 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
@@ -342,13 +384,15 @@ can optionally generate a final response from the recorded trace through a
 controlled provider abstraction. It does not parse files or perform autonomous
 LLM tool selection.
 
-Future phases will add remote MCP transport, auth and permissioning, tool
-allowlist policies, structured error semantics, timeouts and budgets, richer
+Future phases will add advanced timeout enforcement, request cancellation,
+remote MCP transport, auth and permissioning, tool allowlist policies, richer
 observability for MCP calls, batch ingestion, persistent upload storage,
 advanced Docling extraction, Crawl4AI and Textract ingestion, background
 ingestion workflows, file provenance and versioning, LLM-as-judge experiments,
 RAGAS-style metrics, dataset-driven evals, regression thresholds, CI eval
-gates, eval history persistence, and further cost and latency tracking.
+gates, eval history persistence, production secrets management, distributed
+tracing, rate limiting, persistent audit exports, remote MCP transport
+security, real provider retry policies, and further cost and latency tracking.
 
 ## License
 

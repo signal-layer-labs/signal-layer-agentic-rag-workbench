@@ -4,6 +4,9 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.core.budgets import ensure_limit_within_budget
+from app.core.config import get_settings
+from app.core.errors import AppError, orchestration_failed
 from app.db.business_repositories import (
     CustomerFilters,
     SalesFilters,
@@ -51,6 +54,13 @@ class AgentOrchestrator:
         self.response_generator = response_generator
 
     def run(self, request: AgentRunRequest) -> AgentRunResponse:
+        settings = get_settings()
+        planned_tool_calls = 1 + int(request.customer_segment is not None)
+        ensure_limit_within_budget(
+            limit=planned_tool_calls,
+            max_limit=settings.max_tool_calls_per_run,
+            resource_name="tool_calls_per_run",
+        )
         plan = self._build_plan()
         run = self.run_service.create_run(request.business_question)
         self._mark_completed(plan, "create_run")
@@ -171,10 +181,17 @@ class AgentOrchestrator:
                 summary=TRACE_SUMMARY,
                 generated_response=generated_response,
             )
-        except Exception:
+        except AppError:
             self.run_service.update_status(run.id, "failed")
             self._mark_failed(plan)
             raise
+        except Exception as error:
+            self.run_service.update_status(run.id, "failed")
+            self._mark_failed(plan)
+            raise orchestration_failed(
+                "Deterministic orchestration failed.",
+                details={"run_id": str(run.id)},
+            ) from error
 
     def _build_plan(self) -> list[ExecutionPlanStep]:
         return [

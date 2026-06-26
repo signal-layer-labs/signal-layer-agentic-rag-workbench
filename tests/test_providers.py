@@ -1,6 +1,7 @@
 import pytest
 
 from app.core.config import get_settings
+from app.core.errors import AppError
 from app.providers.base import LLMGenerationRequest
 from app.providers.deepseek_provider import DeepSeekLLMProvider
 from app.providers.factory import create_llm_provider, get_llm_provider
@@ -66,7 +67,7 @@ def test_provider_factory_returns_mock_by_default() -> None:
 
 
 def test_unknown_provider_raises_clear_error() -> None:
-    with pytest.raises(ValueError, match="Unsupported LLM provider"):
+    with pytest.raises(AppError, match="Unsupported LLM provider"):
         create_llm_provider("unknown", "test-model")
 
 
@@ -84,7 +85,20 @@ def test_real_provider_skeletons_fail_without_api_key(
 ) -> None:
     provider = create_llm_provider(provider_name, "test-model")
 
-    with pytest.raises(ValueError, match=expected_error):
+    with pytest.raises(AppError, match=expected_error):
+        provider.generate(build_request())
+
+
+@pytest.mark.parametrize(
+    "provider_name",
+    ["openai", "gemini", "deepseek"],
+)
+def test_real_provider_skeletons_raise_not_implemented_when_configured(
+    provider_name: str,
+) -> None:
+    provider = create_llm_provider(provider_name, "test-model", api_key="configured")
+
+    with pytest.raises(AppError, match="not implemented yet"):
         provider.generate(build_request())
 
 

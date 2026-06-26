@@ -1,7 +1,9 @@
 from functools import lru_cache
 from uuid import UUID, uuid4
 
+from app.core.budgets import ensure_limit_within_budget
 from app.core.config import get_settings
+from app.core.errors import AppError, retrieval_failed
 from app.rag.chunking import TextChunker
 from app.rag.embeddings import EmbeddingProvider, MockEmbeddingProvider
 from app.rag.vector_store import (
@@ -63,8 +65,22 @@ class RetrievalService:
         limit: int,
         where: ChunkMetadata | None = None,
     ) -> list[SearchResult]:
-        embedding = self.embedding_provider.embed_text(query)
-        return self.vector_store.search(embedding, limit, where)
+        settings = get_settings()
+        ensure_limit_within_budget(
+            limit=limit,
+            max_limit=settings.max_retrieval_results,
+            resource_name="retrieval_results",
+        )
+        try:
+            embedding = self.embedding_provider.embed_text(query)
+            return self.vector_store.search(embedding, limit, where)
+        except AppError:
+            raise
+        except Exception as error:
+            raise retrieval_failed(
+                "Document retrieval failed.",
+                details={"limit": limit},
+            ) from error
 
 
 @lru_cache

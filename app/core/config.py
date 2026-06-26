@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     chunk_size: int = 800
     chunk_overlap: int = 120
     max_document_upload_bytes: int = 5 * 1024 * 1024
+    request_timeout_seconds: int = 30
+    tool_timeout_seconds: int = 10
+    llm_timeout_seconds: int = 30
+    max_tool_calls_per_run: int = 10
+    max_retrieval_results: int = 10
+    max_eval_cases: int = 25
 
     model_config = SettingsConfigDict(
         env_file=".env",

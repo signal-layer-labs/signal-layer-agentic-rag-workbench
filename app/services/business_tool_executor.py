@@ -1,10 +1,11 @@
 from collections.abc import Callable
-from time import perf_counter
 from typing import TypeVar
 from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from app.core.errors import AppError, tool_execution_failed
+from app.core.timing import measure_time
 from app.db.repositories import AgentRunRepository, ToolCallRepository
 from app.services.business_service import BusinessService
 
@@ -35,9 +36,17 @@ class BusinessToolExecutor:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Agent run not found.",
             )
-        started_at = perf_counter()
-        result = operation()
-        latency_ms = max(0, round((perf_counter() - started_at) * 1000))
+        try:
+            with measure_time() as timer:
+                result = operation()
+        except AppError:
+            raise
+        except Exception as error:
+            raise tool_execution_failed(
+                f"{tool_name} failed.",
+                details={"tool_name": tool_name},
+            ) from error
+        latency_ms = timer.elapsed_ms
         if run_id is None:
             return result, None
         tool_call = self.tool_call_repository.create(
