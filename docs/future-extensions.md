@@ -3,6 +3,7 @@
 Potential modules for later phases include:
 
 - real embedding providers
+- current MCP support is a local stdio foundation only
 - Docling for document parsing
 - Crawl4AI for web scraping
 - real provider hardening
@@ -11,8 +12,12 @@ Potential modules for later phases include:
 - evals
 - autonomous tool selection
 - Agno-based orchestration
-- an MCP server exposing local tools
-- MCP server exposure
+- remote MCP transport
+- auth/permissioning
+- tool allowlist policies
+- structured error semantics
+- timeouts and budgets
+- richer observability for MCP calls
 - streaming execution traces
 - richer error recovery
 - safer permissioning and allowlists for tools
