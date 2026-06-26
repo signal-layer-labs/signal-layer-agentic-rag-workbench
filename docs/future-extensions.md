@@ -24,6 +24,15 @@ Potential modules for later phases include:
 - eval history persistence
 - autonomous tool selection
 - Agno-based orchestration
+- Agno teams
+- Agno workflows
+- AgentOS deployment
+- persistent memory
+- human-in-the-loop
+- richer guardrails
+- real model-backed Agno execution
+- agent eval regression suite
+- tool approval policies
 - remote MCP transport
 - auth/permissioning
 - production secrets management

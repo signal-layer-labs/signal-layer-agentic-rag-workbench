@@ -133,7 +133,26 @@ This response includes the same deterministic trace plus a generated
 human-readable response produced from that trace. The default provider is the
 local mock implementation.
 
-15. Run the local MCP server:
+15. Run the optional Agno adapter endpoint:
+
+```bash
+curl -X POST http://localhost:8000/agent/agno/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question":"Analyze online sales performance and retrieve relevant commercial policy context.",
+    "retrieval_query":"discount approval rules",
+    "sales_region":"east",
+    "sales_channel":"online",
+    "customer_segment":"enterprise",
+    "generate_response":true,
+    "use_agno_agent":true
+  }'
+```
+
+This keeps the existing trace-first flow as the source of truth while adding a
+controlled allowlisted agent adapter layer.
+
+16. Run the local MCP server:
 
 ```bash
 python -m app.mcp.server
@@ -150,7 +169,7 @@ run_traceable_workflow
 The MCP server uses stdio transport and routes each approved tool through the
 existing service layer.
 
-16. Run the deterministic eval script:
+17. Run the deterministic eval script:
 
 ```bash
 python scripts/run_evals.py
@@ -161,7 +180,7 @@ orchestration cases.
 It is intended for local and demo use and ingests the built-in eval documents
 into the local retrieval/vector store.
 
-17. Run the same eval suite through the API:
+18. Run the same eval suite through the API:
 
 ```bash
 curl -X POST http://localhost:8000/evals/run
@@ -170,7 +189,7 @@ curl -X POST http://localhost:8000/evals/run
 Review the `total`, `passed`, `failed`, and per-case metric results to confirm
 retrieval, response generation, and trace behavior remain stable.
 
-18. Trigger a controlled budget error:
+19. Trigger a controlled budget error:
 
 ```bash
 curl -X POST http://localhost:8000/documents/search \
@@ -181,7 +200,7 @@ curl -X POST http://localhost:8000/documents/search \
 This returns a structured error response instead of a stack trace when the
 request exceeds the configured retrieval budget.
 
-19. Trigger a controlled provider configuration error:
+20. Trigger a controlled provider configuration error:
 
 ```bash
 LLM_PROVIDER=openai uvicorn app.main:app --reload
