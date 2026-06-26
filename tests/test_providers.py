@@ -1,8 +1,12 @@
 import pytest
 
+from app.core.config import get_settings
 from app.providers.base import LLMGenerationRequest
-from app.providers.factory import create_llm_provider
+from app.providers.deepseek_provider import DeepSeekLLMProvider
+from app.providers.factory import create_llm_provider, get_llm_provider
+from app.providers.gemini_provider import GeminiLLMProvider
 from app.providers.mock_provider import MockLLMProvider
+from app.providers.openai_provider import OpenAILLMProvider
 from app.schemas.agent import AgentTraceSummary, ExecutionPlanStep
 from app.schemas.business import SalesSummary
 
@@ -34,6 +38,11 @@ def build_request() -> LLMGenerationRequest:
         ),
         system_instruction="Trace only.",
     )
+
+
+def clear_provider_caches() -> None:
+    get_settings.cache_clear()
+    get_llm_provider.cache_clear()
 
 
 def test_mock_provider_is_deterministic() -> None:
@@ -77,3 +86,84 @@ def test_real_provider_skeletons_fail_without_api_key(
 
     with pytest.raises(ValueError, match=expected_error):
         provider.generate(build_request())
+
+
+def test_openai_uses_openai_api_key_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LLM_MODEL", "test-openai-model")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-key")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    clear_provider_caches()
+
+    provider = get_llm_provider()
+
+    assert isinstance(provider, OpenAILLMProvider)
+    assert provider.api_key == "openai-key"
+
+
+def test_gemini_uses_gemini_api_key_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_MODEL", "test-gemini-model")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    clear_provider_caches()
+
+    provider = get_llm_provider()
+
+    assert isinstance(provider, GeminiLLMProvider)
+    assert provider.api_key == "gemini-key"
+
+
+def test_deepseek_uses_deepseek_api_key_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+    monkeypatch.setenv("LLM_MODEL", "test-deepseek-model")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "deepseek-key")
+    clear_provider_caches()
+
+    provider = get_llm_provider()
+
+    assert isinstance(provider, DeepSeekLLMProvider)
+    assert provider.api_key == "deepseek-key"
+
+
+def test_gemini_does_not_use_openai_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_MODEL", "test-gemini-model")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-key")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    clear_provider_caches()
+
+    provider = get_llm_provider()
+
+    assert isinstance(provider, GeminiLLMProvider)
+    assert provider.api_key is None
+
+
+def test_deepseek_does_not_use_other_provider_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+    monkeypatch.setenv("LLM_MODEL", "test-deepseek-model")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-key")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    clear_provider_caches()
+
+    provider = get_llm_provider()
+
+    assert isinstance(provider, DeepSeekLLMProvider)
+    assert provider.api_key is None

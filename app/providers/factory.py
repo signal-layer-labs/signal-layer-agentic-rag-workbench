@@ -30,12 +30,13 @@ def create_llm_provider(
 @lru_cache
 def get_llm_provider() -> LLMProvider:
     settings = get_settings()
-    api_key = (
-        settings.llm_api_key
-        or settings.openai_api_key
-        or settings.gemini_api_key
-        or settings.deepseek_api_key
-    )
+    api_key: str | None = None
+    if settings.llm_provider == "openai":
+        api_key = settings.llm_api_key or settings.openai_api_key
+    elif settings.llm_provider == "gemini":
+        api_key = settings.llm_api_key or settings.gemini_api_key
+    elif settings.llm_provider == "deepseek":
+        api_key = settings.llm_api_key or settings.deepseek_api_key
     return create_llm_provider(
         provider_name=settings.llm_provider,
         model=settings.llm_model,
