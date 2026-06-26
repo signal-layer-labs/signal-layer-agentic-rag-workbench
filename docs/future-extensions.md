@@ -2,55 +2,52 @@
 
 Potential modules for later phases include:
 
-- real embedding providers
-- current MCP support is a local stdio foundation only
-- Docling for document parsing
-- Crawl4AI for web scraping
-- batch ingestion
-- persistent upload storage
-- Docling advanced table/image extraction
-- Textract/S3 ingestion
-- background ingestion workflows
-- file provenance and versioning
-- richer metadata extraction
-- real provider hardening
-- streaming responses
-- structured output
-- LLM-as-judge experiments
-- RAGAS-style metrics
-- dataset-driven evals
-- regression thresholds
-- CI eval gate
-- eval history persistence
-- autonomous tool selection
-- Agno-based orchestration
-- Agno teams
-- Agno workflows
-- AgentOS deployment
-- persistent memory
-- human-in-the-loop
-- richer guardrails
-- real model-backed Agno execution
-- agent eval regression suite
-- tool approval policies
-- remote MCP transport
-- auth/permissioning
-- production secrets management
-- rate limiting
-- distributed tracing
-- advanced timeout enforcement
-- request cancellation
-- persistent audit exports
-- remote MCP transport security
-- real provider retry policies
-- tool allowlist policies
-- richer observability for MCP calls
-- streaming execution traces
-- richer error recovery
-- safer permissioning and allowlists for tools
-- cost and latency observability
-- cost tracking
-- queue-based execution
+* real embedding providers
+* richer document extraction
+* Docling advanced table and image extraction
+* Crawl4AI ingestion
+* Textract-backed ingestion
+* batch ingestion
+* persistent upload storage
+* file provenance and versioning
+* richer metadata extraction
+* real provider integration
+* real provider hardening
+* structured output
+* streaming responses
+* dataset-driven evals
+* LLM-as-judge experiments
+* RAGAS-style metrics
+* regression thresholds
+* CI eval gate
+* eval history persistence
+* Agno-based orchestration
+* real model-backed Agno execution
+* Agno teams
+* Agno workflows
+* AgentOS deployment
+* persistent memory
+* human-in-the-loop
+* richer guardrails
+* current MCP support is a local stdio foundation only
+* remote MCP transport
+* remote MCP transport security
+* auth and permissioning
+* safer permissioning and allowlists for tools
+* tool approval and allowlist policies
+* richer observability for MCP calls
+* distributed tracing
+* streaming execution traces
+* structured error recovery improvements
+* advanced timeout enforcement
+* request cancellation
+* production secrets management
+* rate limiting
+* persistent audit exports
+* cost and latency observability
+* cost tracking
+* queue-based execution
+* frontend or dashboard work as future optional work
 
-These are directional extension points, not dependencies of the current
-backend foundation.
+These are directional extension points, not dependencies of the current local
+workbench foundation.
