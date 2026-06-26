@@ -5,6 +5,10 @@ retrieval, deterministic tools, orchestration, controlled response generation,
 MCP tool exposure, deterministic evals, production hardening, and an optional
 Agno adapter.
 
+<p align="center">
+  <img src="docs/assets/workbench-architecture.svg" alt="Signal Layer Agentic RAG Workbench architecture" width="900">
+</p>
+
 ## What this is
 
 This project is a local engineering workbench for building and inspecting
