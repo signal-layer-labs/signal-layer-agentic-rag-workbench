@@ -96,6 +96,22 @@ The eval layer reuses the existing ingestion, retrieval, orchestration, and
 response-generation boundaries. It scores retrieval expectations, generated
 response consistency, and trace creation without using LLM-as-judge behavior.
 
+## Agno agent flow
+
+```text
+business question
+  → Agno agent adapter
+  → allowlisted Agno tools
+  → existing service layer
+  → retrieval_events / tool_calls / agent_runs
+  → controlled generated response
+  → structured trace output
+```
+
+The Agno adapter is optional and controlled. It does not bypass the existing
+trace-first orchestration baseline or expose raw SQL, shell commands, or
+unrestricted tool selection.
+
 ## Production hardening flow
 
 ```text

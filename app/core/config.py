@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     max_tool_calls_per_run: int = 10
     max_retrieval_results: int = 10
     max_eval_cases: int = 25
+    agno_enabled: bool = True
+    agno_model: str = "mock-agno-agent"
+    agno_allow_real_provider: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

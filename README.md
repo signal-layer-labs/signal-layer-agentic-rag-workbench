@@ -6,8 +6,9 @@ auditable AI responses.
 The current version provides traceable agent runs, raw-text document retrieval,
 document parsing, deterministic orchestration, controlled response generation,
 deterministic tools for querying structured business data, an MCP server
-foundation, deterministic evals, and auditable AI responses. PostgreSQL stores
-business records and audit events while ChromaDB stores document chunks.
+foundation, deterministic evals, production hardening, and auditable AI
+responses. PostgreSQL stores business records and audit events while ChromaDB
+stores document chunks.
 
 ## Why this exists
 
@@ -95,6 +96,9 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `MAX_TOOL_CALLS_PER_RUN`: maximum allowed tool calls in one orchestration run.
 * `MAX_RETRIEVAL_RESULTS`: maximum retrieval results returned by one query.
 * `MAX_EVAL_CASES`: maximum eval cases allowed in one eval run.
+* `AGNO_ENABLED`: enables the optional Agno agent adapter layer.
+* `AGNO_MODEL`: configured model label for the Agno adapter path.
+* `AGNO_ALLOW_REAL_PROVIDER`: keeps real model-backed Agno execution disabled by default.
 
 ## Docker Compose
 
@@ -232,6 +236,33 @@ orchestration flow and then converts the resulting trace into a human-readable
 response through the provider abstraction. The default provider is the local
 deterministic mock implementation. This does not add autonomous tool selection
 or LLM-driven tool calling.
+
+## Agno agent layer foundation
+
+The deterministic `POST /agent/run` endpoint remains the reliability baseline.
+This phase adds `POST /agent/agno/run` as an optional controlled agent layer
+over approved allowlisted tools and the existing trace-first service flow.
+
+Run the Agno adapter endpoint:
+
+```bash
+curl -X POST http://localhost:8000/agent/agno/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question": "Analyze online sales performance and retrieve relevant commercial policy context.",
+    "retrieval_query": "discount approval rules",
+    "sales_region": "east",
+    "sales_channel": "online",
+    "customer_segment": "enterprise",
+    "generate_response": true,
+    "use_agno_agent": true
+  }'
+```
+
+The Agno layer is optional, uses approved allowlisted tools only, and reuses
+the existing retrieval and business services plus the existing orchestrator for
+trace creation. This phase does not add AgentOS deployment, unrestricted tools,
+auth, or external provider calls in tests.
 
 ## Business data tools
 
@@ -372,7 +403,7 @@ docker compose config
 Current validation:
 
 * Ruff: passing
-* Pytest: 94 tests passing
+* Pytest: 103 tests passing
 * Mypy: no issues in application code
 * Docker Compose config: valid
 
