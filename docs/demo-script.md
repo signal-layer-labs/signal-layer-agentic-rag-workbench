@@ -71,3 +71,21 @@ curl -X POST http://localhost:8000/business/sales/summary \
 
 The resulting `tool_call_id` identifies the audit record showing which
 structured data tool was used, its approved filters, its output, and latency.
+
+10. Run the deterministic orchestration endpoint:
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_question":"Analyze online sales performance and find relevant commercial policy context.",
+    "retrieval_query":"discount approval rules",
+    "sales_region":"east",
+    "sales_channel":"online",
+    "customer_segment":"enterprise"
+  }'
+```
+
+This response returns a completed run, the explicit execution plan, any
+retrieval event identifier, any logged tool call identifiers, and a
+deterministic trace summary.

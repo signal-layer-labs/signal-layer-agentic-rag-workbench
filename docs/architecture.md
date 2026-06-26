@@ -4,22 +4,11 @@ The intended trace flow is:
 
 ```text
 business question
-  → agent run
-  → retrieval query
-  → ChromaDB
-  → retrieved chunks
-  → retrieval event
-  → future agent response
-```
-
-The structured business data flow is:
-
-```text
-business question
-  → agent run
-  → business tool query
-  → PostgreSQL
-  → tool call event
+  → create run
+  → optional document retrieval
+  → business tools
+  → retrieval_events + tool_calls
+  → deterministic trace summary
   → future agent response
 ```
 
@@ -31,7 +20,7 @@ and results in PostgreSQL under the run identifier.
 
 - API routes define HTTP contracts and status handling.
 - Schemas validate input and shape responses.
-- Services coordinate run, ingestion, and retrieval behavior.
+- Services coordinate run, ingestion, retrieval, and orchestration behavior.
 - Repositories isolate persistence operations.
 - SQLAlchemy models define PostgreSQL records and relationships.
 - The RAG layer provides deterministic chunking, mock embeddings, and the
@@ -40,6 +29,8 @@ and results in PostgreSQL under the run identifier.
   accepting raw SQL.
 - Observability provides a home for logging and future trace instrumentation.
 
-Retrieval events are written by `POST /runs/{run_id}/retrieve`. Business tool
-calls with a run identifier record their inputs, outputs, completion status,
-and latency in `tool_calls`.
+Retrieval events are written by `POST /runs/{run_id}/retrieve` and
+`POST /agent/run` when a retrieval query is provided. Business tool calls with
+a run identifier record their inputs, outputs, completion status, and latency
+in `tool_calls`. The orchestration endpoint combines those trace records into a
+single deterministic response that leaves room for future response generation.
