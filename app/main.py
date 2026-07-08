@@ -1,6 +1,6 @@
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-import logging
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +18,6 @@ from app.core.deployment import (
     parse_cors_allowed_origins,
     validate_deployment_settings,
 )
-from app.core.security import enforce_security
 from app.core.errors import (
     AppError,
     internal_error,
@@ -26,6 +25,7 @@ from app.core.errors import (
     unsupported_document_type,
     validation_error,
 )
+from app.core.security import enforce_security
 from app.db.session import create_database_tables
 from app.observability.tracing import configure_logging
 

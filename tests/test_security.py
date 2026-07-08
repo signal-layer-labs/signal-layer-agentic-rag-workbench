@@ -5,7 +5,7 @@ import importlib
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api import routes_health
+from app.api import routes_agent, routes_health
 from app.core import security as security_module
 from app.core.config import get_settings
 
@@ -71,7 +71,7 @@ def test_api_key_guard_rejects_missing_key(monkeypatch: pytest.MonkeyPatch) -> N
         REQUIRE_DEMO_API_KEY="true",
         DEMO_API_KEY="super-secret",
     )
-    app_main.app.dependency_overrides[app_main.get_agent_orchestrator] = (
+    app_main.app.dependency_overrides[routes_agent.get_agent_orchestrator] = (
         lambda: StubOrchestrator()
     )
 
@@ -97,7 +97,7 @@ def test_api_key_guard_allows_valid_key(monkeypatch: pytest.MonkeyPatch) -> None
         REQUIRE_DEMO_API_KEY="true",
         DEMO_API_KEY="super-secret",
     )
-    app_main.app.dependency_overrides[app_main.get_agent_orchestrator] = (
+    app_main.app.dependency_overrides[routes_agent.get_agent_orchestrator] = (
         lambda: StubOrchestrator()
     )
 
@@ -116,7 +116,7 @@ def test_api_key_guard_rejects_wrong_key(monkeypatch: pytest.MonkeyPatch) -> Non
         REQUIRE_DEMO_API_KEY="true",
         DEMO_API_KEY="super-secret",
     )
-    app_main.app.dependency_overrides[app_main.get_agent_orchestrator] = (
+    app_main.app.dependency_overrides[routes_agent.get_agent_orchestrator] = (
         lambda: StubOrchestrator()
     )
 
@@ -147,7 +147,7 @@ def test_rate_limiter_returns_429_after_threshold(
         RATE_LIMIT_WINDOW_SECONDS="60",
         REQUIRE_DEMO_API_KEY="false",
     )
-    app_main.app.dependency_overrides[app_main.get_agent_orchestrator] = (
+    app_main.app.dependency_overrides[routes_agent.get_agent_orchestrator] = (
         lambda: StubOrchestrator()
     )
 
