@@ -79,6 +79,8 @@ demo, but it is still a local workbench first.
 * `ENABLE_DEMO_ENDPOINTS` gates demo/business/workflow routes when disabled.
 * Hosted-demo security adds an API key guard, in-memory rate limiting, and a
   request-size ceiling for demo traffic.
+* For hosted demo deployment, final smoke checks, API key usage, and rollback
+  steps, see [docs/hosted-demo-runbook.md](docs/hosted-demo-runbook.md).
 * Production SaaS features such as auth, tenant isolation, billing, and
   rate limiting are intentionally future work.
 
