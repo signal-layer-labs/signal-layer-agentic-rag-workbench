@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
 
@@ -6,7 +6,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
-from starlette.types import RequestResponseEndpoint
 
 from app.api.routes_agent import router as agent_router
 from app.api.routes_business import router as business_router
@@ -65,7 +64,7 @@ app.add_middleware(
 @app.middleware("http")
 async def security_middleware(
     request: Request,
-    call_next: RequestResponseEndpoint,
+    call_next: Callable[[Request], Awaitable[Response]],
 ) -> Response:
     if request.method == "OPTIONS":
         return await call_next(request)
