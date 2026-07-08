@@ -8,7 +8,13 @@ class Settings(BaseSettings):
         "postgresql+psycopg://postgres:postgres@localhost:5432/"
         "agentic_rag_workbench"
     )
+    app_host: str = "0.0.0.0"
+    app_port: int = 8000
     app_env: str = "development"
+    deployment_mode: str = "local"
+    cors_allowed_origins: str = "*"
+    enable_docs: bool = True
+    enable_demo_endpoints: bool = True
     log_level: str = "INFO"
     chroma_host: str = "localhost"
     chroma_port: int = 8000

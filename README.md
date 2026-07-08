@@ -67,6 +67,20 @@ introducing broader autonomy or real external provider execution.
 * Structured production hardening with budgets, timing, and normalized errors
 * Optional Agno adapter path through `POST /agent/agno/run`
 
+## Deployment readiness
+
+This repository includes a deployment-readiness foundation for a safe hosted
+demo, but it is still a local workbench first.
+
+* Local Docker Compose remains the main demo path.
+* Hosted demo deployment is possible with explicit environment variables.
+* Deployment details, health checks, and smoke validation live in
+  [docs/deployment.md](docs/deployment.md).
+* `ENABLE_DEMO_ENDPOINTS` is reserved for future endpoint gating and is not
+  enforced by the app yet.
+* Production SaaS features such as auth, tenant isolation, billing, and
+  rate limiting are intentionally future work.
+
 ## Architecture diagram
 
 ```mermaid
@@ -125,7 +139,14 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 ## Environment variables
 
 * `DATABASE_URL`: SQLAlchemy connection URL for PostgreSQL.
+* `APP_HOST`: API bind host for local or hosted demo runs.
+* `APP_PORT`: API bind port for local or hosted demo runs.
 * `APP_ENV`: runtime environment name.
+* `DEPLOYMENT_MODE`: deployment profile, such as `local` or `hosted`.
+* `CORS_ALLOWED_ORIGINS`: CORS allowlist, `*` for local development.
+* `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
+* `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
+  endpoint gating.
 * `LOG_LEVEL`: application logging level.
 * `CHROMA_HOST`: ChromaDB host.
 * `CHROMA_PORT`: ChromaDB port.
