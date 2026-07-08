@@ -110,6 +110,33 @@ def test_api_key_guard_allows_valid_key(monkeypatch: pytest.MonkeyPatch) -> None
     assert response.status_code == 200
 
 
+def test_api_key_guard_rejects_wrong_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    client, app_main = load_app(
+        monkeypatch,
+        REQUIRE_DEMO_API_KEY="true",
+        DEMO_API_KEY="super-secret",
+    )
+    app_main.app.dependency_overrides[app_main.get_agent_orchestrator] = (
+        lambda: StubOrchestrator()
+    )
+
+    response = client.post(
+        "/agent/run",
+        json={"business_question": "Analyze sales."},
+        headers={"X-Demo-API-Key": "wrong-secret"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "error": {
+            "code": "unauthorized",
+            "message": "Invalid or missing demo API key.",
+            "retryable": False,
+            "details": {},
+        }
+    }
+
+
 def test_rate_limiter_returns_429_after_threshold(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

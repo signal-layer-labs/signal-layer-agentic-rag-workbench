@@ -24,8 +24,7 @@ production SaaS.
 - `DEPLOYMENT_MODE`: `local` or `hosted`.
 - `CORS_ALLOWED_ORIGINS`: `*` locally, explicit origins for hosted demos.
 - `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
-- `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
-  endpoint gating.
+- `ENABLE_DEMO_ENDPOINTS`: gates demo/business/workflow routes when disabled.
 - `REQUIRE_DEMO_API_KEY`: requires a demo API key for hosted demo endpoints.
 - `DEMO_API_KEY`: shared demo API key value.
 - `DEMO_API_KEY_HEADER`: header name used for demo API key checks.
@@ -94,6 +93,8 @@ DOCS_ENABLED=false BASE_URL=http://localhost:8000 python scripts/deployment_smok
 - Hosted demos should set `REQUIRE_DEMO_API_KEY=true` and use a strong
   `DEMO_API_KEY`.
 - Hosted demos should use explicit `CORS_ALLOWED_ORIGINS`.
+- `ENABLE_DEMO_ENDPOINTS=true` when serving the demo surface; set it to
+  `false` when only health, readiness, and docs should remain exposed.
 - Rate limiting is in-memory and single-process only.
 - Request size protection uses `Content-Length`; it does not buffer the body.
 - No tenant model or payments layer is included.
