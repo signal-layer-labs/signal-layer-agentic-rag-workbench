@@ -12,7 +12,7 @@ def build_url(base_url: str, path: str) -> str:
 
 
 def fetch_status(url: str) -> int:
-    request = Request(url, headers={"Accept": "application/json"})
+    request = Request(url, headers=build_headers())
     try:
         with urlopen(request, timeout=10) as response:
             _ = response.read()
@@ -23,6 +23,16 @@ def fetch_status(url: str) -> int:
     except URLError as error:
         print(f"FAIL request error for {url}: {error}")
         return 0
+
+
+def build_headers() -> dict[str, str]:
+    headers = {"Accept": "application/json"}
+    demo_api_key = os.environ.get("DEMO_API_KEY", "")
+    if demo_api_key:
+        headers[os.environ.get("DEMO_API_KEY_HEADER", "X-Demo-API-Key")] = (
+            demo_api_key
+        )
+    return headers
 
 
 def main() -> int:

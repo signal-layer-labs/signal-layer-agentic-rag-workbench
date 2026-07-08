@@ -49,7 +49,8 @@ workbench foundation.
 * remote MCP transport security
 * auth and permissioning
 * production secrets management
-* rate limiting
+* distributed rate limiting
+* persistent rate-limit storage
 * distributed tracing
 * advanced timeout enforcement
 * request cancellation

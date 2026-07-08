@@ -7,8 +7,8 @@ production SaaS.
 
 - Local Docker Compose remains the primary demo path.
 - Hosted demo deployment is supported with explicit environment variables.
-- Authentication, tenant isolation, billing, rate limiting, and production
-  secrets management are intentionally out of scope for this phase.
+- User accounts, tenant isolation, billing, and production secrets management
+  are intentionally out of scope for this phase.
 
 ## Required environment variables
 
@@ -24,8 +24,14 @@ production SaaS.
 - `DEPLOYMENT_MODE`: `local` or `hosted`.
 - `CORS_ALLOWED_ORIGINS`: `*` locally, explicit origins for hosted demos.
 - `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
-- `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
-  endpoint gating.
+- `ENABLE_DEMO_ENDPOINTS`: gates demo/business/workflow routes when disabled.
+- `REQUIRE_DEMO_API_KEY`: requires a demo API key for hosted demo endpoints.
+- `DEMO_API_KEY`: shared demo API key value.
+- `DEMO_API_KEY_HEADER`: header name used for demo API key checks.
+- `RATE_LIMIT_ENABLED`: enables per-process demo rate limiting.
+- `RATE_LIMIT_REQUESTS`: number of requests allowed per window.
+- `RATE_LIMIT_WINDOW_SECONDS`: rolling rate-limit window size.
+- `MAX_REQUEST_BODY_BYTES`: request body ceiling enforced from `Content-Length`.
 
 ## Recommended values
 
@@ -35,6 +41,8 @@ For local development:
 - `CORS_ALLOWED_ORIGINS=*`
 - `ENABLE_DOCS=true`
 - `ENABLE_DEMO_ENDPOINTS=true`
+- `REQUIRE_DEMO_API_KEY=false`
+- `RATE_LIMIT_ENABLED=false`
 
 For a hosted demo:
 
@@ -43,9 +51,13 @@ For a hosted demo:
 - `APP_PORT=8000`
 - `CORS_ALLOWED_ORIGINS=https://demo.example.com`
 - `ENABLE_DOCS=true`
-- `ENABLE_DEMO_ENDPOINTS=true` is reserved for future endpoint gating and
-  should remain enabled only when you want to preserve the planned demo
-  surface configuration
+- `ENABLE_DEMO_ENDPOINTS=true`
+- `REQUIRE_DEMO_API_KEY=true`
+- `DEMO_API_KEY=use-a-long-random-secret`
+- `RATE_LIMIT_ENABLED=true`
+- `RATE_LIMIT_REQUESTS=60`
+- `RATE_LIMIT_WINDOW_SECONDS=60`
+- `MAX_REQUEST_BODY_BYTES=1048576`
 
 ## Local Docker Compose
 
@@ -77,8 +89,15 @@ DOCS_ENABLED=false BASE_URL=http://localhost:8000 python scripts/deployment_smok
 
 ## Hosted demo caveats
 
-- No auth or API key protection is included in this phase.
-- No rate limiting, tenant model, or payments layer is included.
+- Local mode remains open by default.
+- Hosted demos should set `REQUIRE_DEMO_API_KEY=true` and use a strong
+  `DEMO_API_KEY`.
+- Hosted demos should use explicit `CORS_ALLOWED_ORIGINS`.
+- `ENABLE_DEMO_ENDPOINTS=true` when serving the demo surface; set it to
+  `false` when only health, readiness, and docs should remain exposed.
+- Rate limiting is in-memory and single-process only.
+- Request size protection uses `Content-Length`; it does not buffer the body.
+- No tenant model or payments layer is included.
 - Real provider execution remains disabled by default.
 - Do not commit production secrets into this repository.
 

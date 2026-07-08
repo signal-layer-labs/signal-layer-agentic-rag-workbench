@@ -76,6 +76,36 @@ def validate_deployment_settings(settings: Settings) -> list[DeploymentValidatio
                     ),
                 )
             )
+        if not settings.require_demo_api_key:
+            issues.append(
+                DeploymentValidationIssue(
+                    code="demo_api_key_disabled_hosted",
+                    message=(
+                        "Hosted demo deployments should enable "
+                        "REQUIRE_DEMO_API_KEY."
+                    ),
+                )
+            )
+        if settings.require_demo_api_key and not settings.demo_api_key.strip():
+            issues.append(
+                DeploymentValidationIssue(
+                    code="demo_api_key_missing_hosted",
+                    message=(
+                        "Hosted demo deployments with "
+                        "REQUIRE_DEMO_API_KEY=true must set DEMO_API_KEY."
+                    ),
+                )
+            )
+        if not settings.rate_limit_enabled:
+            issues.append(
+                DeploymentValidationIssue(
+                    code="rate_limit_disabled_hosted",
+                    message=(
+                        "Hosted demo deployments should enable "
+                        "RATE_LIMIT_ENABLED."
+                    ),
+                )
+            )
         if settings.enable_demo_endpoints:
             issues.append(
                 DeploymentValidationIssue(
@@ -84,6 +114,29 @@ def validate_deployment_settings(settings: Settings) -> list[DeploymentValidatio
                         "Hosted demo deployments should disable "
                         "ENABLE_DEMO_ENDPOINTS unless the demo surface is intended."
                     ),
+                )
+            )
+        if settings.rate_limit_requests <= 0:
+            issues.append(
+                DeploymentValidationIssue(
+                    code="rate_limit_requests_invalid",
+                    message="RATE_LIMIT_REQUESTS must be a positive integer.",
+                )
+            )
+        if settings.rate_limit_window_seconds <= 0:
+            issues.append(
+                DeploymentValidationIssue(
+                    code="rate_limit_window_invalid",
+                    message=(
+                        "RATE_LIMIT_WINDOW_SECONDS must be a positive integer."
+                    ),
+                )
+            )
+        if settings.max_request_body_bytes <= 0:
+            issues.append(
+                DeploymentValidationIssue(
+                    code="max_request_body_bytes_invalid",
+                    message="MAX_REQUEST_BODY_BYTES must be a positive integer.",
                 )
             )
 

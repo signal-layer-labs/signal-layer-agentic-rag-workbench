@@ -1,10 +1,11 @@
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 
 from app.api.routes_agent import router as agent_router
 from app.api.routes_business import router as business_router
@@ -24,6 +25,7 @@ from app.core.errors import (
     unsupported_document_type,
     validation_error,
 )
+from app.core.security import enforce_security
 from app.db.session import create_database_tables
 from app.observability.tracing import configure_logging
 
@@ -57,6 +59,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_middleware(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    blocked_response = enforce_security(request, settings)
+    if blocked_response is not None:
+        return blocked_response
+    return await call_next(request)
 
 
 @app.exception_handler(AppError)

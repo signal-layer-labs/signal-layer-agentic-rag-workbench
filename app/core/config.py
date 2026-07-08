@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     cors_allowed_origins: str = "*"
     enable_docs: bool = True
     enable_demo_endpoints: bool = True
+    require_demo_api_key: bool = False
+    demo_api_key: str = ""
+    demo_api_key_header: str = "X-Demo-API-Key"
+    rate_limit_enabled: bool = False
+    rate_limit_requests: int = 60
+    rate_limit_window_seconds: int = 60
+    max_request_body_bytes: int = 1_048_576
     log_level: str = "INFO"
     chroma_host: str = "localhost"
     chroma_port: int = 8000
