@@ -76,6 +76,8 @@ demo, but it is still a local workbench first.
 * Hosted demo deployment is possible with explicit environment variables.
 * Deployment details, health checks, and smoke validation live in
   [docs/deployment.md](docs/deployment.md).
+* `ENABLE_DEMO_ENDPOINTS` is reserved for future endpoint gating and is not
+  enforced by the app yet.
 * Production SaaS features such as auth, tenant isolation, billing, and
   rate limiting are intentionally future work.
 
@@ -143,7 +145,8 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `DEPLOYMENT_MODE`: deployment profile, such as `local` or `hosted`.
 * `CORS_ALLOWED_ORIGINS`: CORS allowlist, `*` for local development.
 * `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
-* `ENABLE_DEMO_ENDPOINTS`: enables demo-oriented endpoints.
+* `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
+  endpoint gating.
 * `LOG_LEVEL`: application logging level.
 * `CHROMA_HOST`: ChromaDB host.
 * `CHROMA_PORT`: ChromaDB port.

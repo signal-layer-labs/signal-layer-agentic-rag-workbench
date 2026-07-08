@@ -24,7 +24,8 @@ production SaaS.
 - `DEPLOYMENT_MODE`: `local` or `hosted`.
 - `CORS_ALLOWED_ORIGINS`: `*` locally, explicit origins for hosted demos.
 - `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
-- `ENABLE_DEMO_ENDPOINTS`: controls demo-oriented endpoints.
+- `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
+  endpoint gating.
 
 ## Recommended values
 
@@ -42,7 +43,9 @@ For a hosted demo:
 - `APP_PORT=8000`
 - `CORS_ALLOWED_ORIGINS=https://demo.example.com`
 - `ENABLE_DOCS=true`
-- `ENABLE_DEMO_ENDPOINTS=true` only if the demo surface should remain visible
+- `ENABLE_DEMO_ENDPOINTS=true` is reserved for future endpoint gating and
+  should remain enabled only when you want to preserve the planned demo
+  surface configuration
 
 ## Local Docker Compose
 
