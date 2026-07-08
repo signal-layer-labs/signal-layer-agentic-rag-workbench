@@ -76,8 +76,9 @@ demo, but it is still a local workbench first.
 * Hosted demo deployment is possible with explicit environment variables.
 * Deployment details, health checks, and smoke validation live in
   [docs/deployment.md](docs/deployment.md).
-* `ENABLE_DEMO_ENDPOINTS` is reserved for future endpoint gating and is not
-  enforced by the app yet.
+* `ENABLE_DEMO_ENDPOINTS` gates demo/business/workflow routes when disabled.
+* Hosted-demo security adds an API key guard, in-memory rate limiting, and a
+  request-size ceiling for demo traffic.
 * Production SaaS features such as auth, tenant isolation, billing, and
   rate limiting are intentionally future work.
 
@@ -145,8 +146,15 @@ OpenAPI documentation is available at `http://localhost:8000/docs`.
 * `DEPLOYMENT_MODE`: deployment profile, such as `local` or `hosted`.
 * `CORS_ALLOWED_ORIGINS`: CORS allowlist, `*` for local development.
 * `ENABLE_DOCS`: enables Swagger/OpenAPI docs.
-* `ENABLE_DEMO_ENDPOINTS`: reserved hosted-demo hardening flag for future
-  endpoint gating.
+* `ENABLE_DEMO_ENDPOINTS`: gates demo/business/workflow routes when disabled.
+* `REQUIRE_DEMO_API_KEY`: requires the configured demo API key on demo
+  endpoints.
+* `DEMO_API_KEY`: shared demo API key value.
+* `DEMO_API_KEY_HEADER`: request header used for the demo API key.
+* `RATE_LIMIT_ENABLED`: enables single-process in-memory request limiting.
+* `RATE_LIMIT_REQUESTS`: allowed requests per window when rate limiting is on.
+* `RATE_LIMIT_WINDOW_SECONDS`: rolling window size for rate limiting.
+* `MAX_REQUEST_BODY_BYTES`: request body limit enforced from `Content-Length`.
 * `LOG_LEVEL`: application logging level.
 * `CHROMA_HOST`: ChromaDB host.
 * `CHROMA_PORT`: ChromaDB port.

@@ -1,10 +1,12 @@
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
+from starlette.types import RequestResponseEndpoint
 
 from app.api.routes_agent import router as agent_router
 from app.api.routes_business import router as business_router
@@ -17,6 +19,7 @@ from app.core.deployment import (
     parse_cors_allowed_origins,
     validate_deployment_settings,
 )
+from app.core.security import enforce_security
 from app.core.errors import (
     AppError,
     internal_error,
@@ -57,6 +60,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_middleware(
+    request: Request,
+    call_next: RequestResponseEndpoint,
+) -> Response:
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    blocked_response = enforce_security(request, settings)
+    if blocked_response is not None:
+        return blocked_response
+    return await call_next(request)
 
 
 @app.exception_handler(AppError)
