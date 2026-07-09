@@ -6,7 +6,7 @@ MCP tool exposure, deterministic evals, production hardening, and an optional
 Agno adapter.
 
 <p align="center">
-  <img src="docs/assets/workbench-architecture.svg" alt="Signal Layer Agentic RAG Workbench architecture" width="900">
+  <img src="docs/assets/workbench-architecture.png" alt="Signal Layer Agentic RAG Workbench architecture" width="960">
 </p>
 
 ## What this is
@@ -81,6 +81,8 @@ demo, but it is still a local workbench first.
 * `ENABLE_DEMO_ENDPOINTS` gates demo/business/workflow routes when disabled.
 * Hosted-demo security adds an API key guard, in-memory rate limiting, and a
   request-size ceiling for demo traffic.
+* For hosted demo deployment, final smoke checks, API key usage, and rollback
+  steps, see [docs/hosted-demo-runbook.md](docs/hosted-demo-runbook.md).
 * Production SaaS features such as auth, tenant isolation, billing, and
   rate limiting are intentionally future work.
 
