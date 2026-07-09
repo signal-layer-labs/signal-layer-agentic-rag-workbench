@@ -66,6 +66,8 @@ introducing broader autonomy or real external provider execution.
 * Deterministic evaluation through `POST /evals/run` and `scripts/run_evals.py`
 * Structured production hardening with budgets, timing, and normalized errors
 * Optional Agno adapter path through `POST /agent/agno/run`
+* Client-facing web UI served at `/` for grounded answers, KPIs, and sources
+  (English default with a Portuguese toggle)
 
 ## Deployment readiness
 
@@ -138,6 +140,20 @@ uvicorn app.main:app --reload
 ```
 
 OpenAPI documentation is available at `http://localhost:8000/docs`.
+
+## Web UI
+
+A client-facing web app is served by the API itself:
+
+* Open `http://localhost:8000/` (root redirects to `/app/`).
+
+Ask a business question in natural language and get a grounded answer with
+supporting KPIs, the documents that were consulted, and an optional
+"How this was produced" panel showing the deterministic execution plan. The
+UI calls the same `POST /agent/run` and `POST /documents/search` endpoints, so
+no separate build step or server is required. It defaults to English with a
+Portuguese toggle. When the hosted-demo API key is required, set it once via
+the key button in the header (stored locally and sent as `X-Demo-API-Key`).
 
 ## Environment variables
 
