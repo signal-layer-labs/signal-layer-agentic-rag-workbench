@@ -98,17 +98,93 @@ export async function runAgent(
 
 export async function searchDocuments(
   query: string,
+  limit = 4,
 ): Promise<DocumentSearchResult[]> {
+  const res = await fetch("/documents/search", {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ query, limit }),
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  const body = await res.json();
+  return body.results ?? [];
+}
+
+export interface IngestResult {
+  document_id: string;
+  title: string;
+  source: string;
+  chunks_created: number;
+  status: string;
+}
+
+function multipartHeaders(): Record<string, string> {
+  const h: Record<string, string> = {};
+  const key = localStorage.getItem(DEMO_KEY_STORAGE);
+  if (key) h["X-Demo-API-Key"] = key;
+  return h;
+}
+
+export async function ingestText(payload: {
+  title: string;
+  source: string;
+  content: string;
+  metadata: Record<string, string>;
+}): Promise<IngestResult> {
+  const res = await fetch("/documents/ingest", {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return res.json();
+}
+
+export async function ingestFile(
+  file: File,
+  metadata: Record<string, string>,
+): Promise<IngestResult> {
+  const form = new FormData();
+  form.append("file", file);
+  if (Object.keys(metadata).length > 0) {
+    form.append("metadata", JSON.stringify(metadata));
+  }
+  const res = await fetch("/documents/parse-ingest", {
+    method: "POST",
+    headers: multipartHeaders(),
+    body: form,
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return res.json();
+}
+
+// Per-browser question history (there is no list-all runs endpoint).
+export interface HistoryItem {
+  id: string;
+  question: string;
+  ts: number;
+  run: AgentRunResponse;
+  sources: DocumentSearchResult[];
+}
+
+const HISTORY_KEY = "sl_history";
+
+export function loadHistory(): HistoryItem[] {
   try {
-    const res = await fetch("/documents/search", {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({ query, limit: 4 }),
-    });
-    if (!res.ok) return [];
-    const body = await res.json();
-    return body.results ?? [];
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
   } catch {
     return [];
   }
+}
+
+export function pushHistory(item: HistoryItem): HistoryItem[] {
+  const list = loadHistory().filter((h) => h.id !== item.id);
+  list.unshift(item);
+  const trimmed = list.slice(0, 50);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  return trimmed;
+}
+
+export function clearHistory(): void {
+  localStorage.removeItem(HISTORY_KEY);
 }

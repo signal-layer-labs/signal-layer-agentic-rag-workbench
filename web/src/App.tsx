@@ -5,10 +5,16 @@ import {
   searchDocuments,
   getDemoKey,
   setDemoKey,
+  loadHistory,
+  pushHistory,
+  clearHistory,
   type AgentRunResponse,
   type DocumentSearchResult,
+  type HistoryItem,
 } from "./api";
-import { Header, EmptyState, Results } from "./components";
+import { Header, EmptyState, Results, type View } from "./components";
+import Documents from "./Documents";
+import History from "./History";
 
 interface Filters {
   region: string;
@@ -22,6 +28,7 @@ export default function App() {
   );
   const s = I18N[lang];
 
+  const [view, setView] = useState<View>("ask");
   const [input, setInput] = useState("");
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,6 +41,7 @@ export default function App() {
     channel: "",
     segment: "",
   });
+  const [history, setHistory] = useState<HistoryItem[]>(() => loadHistory());
 
   function changeLang(next: Lang) {
     setLang(next);
@@ -49,6 +57,7 @@ export default function App() {
   async function submit(text?: string) {
     const q = (text ?? input).trim();
     if (!q || loading) return;
+    setView("ask");
     setInput(q);
     setQuestion(q);
     setLoading(true);
@@ -61,10 +70,19 @@ export default function App() {
           channel: filters.channel.trim() || null,
           segment: filters.segment.trim() || null,
         }),
-        searchDocuments(q),
+        searchDocuments(q).catch(() => [] as DocumentSearchResult[]),
       ]);
       setRun(runResult);
       setSources(docs);
+      setHistory(
+        pushHistory({
+          id: runResult.run_id,
+          question: q,
+          ts: Date.now(),
+          run: runResult,
+          sources: docs,
+        }),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : s.err_generic);
     } finally {
@@ -72,96 +90,129 @@ export default function App() {
     }
   }
 
-  const showEmpty = !loading && !run && !error;
+  function openFromHistory(item: HistoryItem) {
+    setQuestion(item.question);
+    setInput(item.question);
+    setRun(item.run);
+    setSources(item.sources);
+    setError("");
+    setLoading(false);
+    setView("ask");
+  }
+
+  function onClearHistory() {
+    clearHistory();
+    setHistory([]);
+  }
+
+  const showEmpty = view === "ask" && !loading && !run && !error;
 
   return (
     <>
-      <Header lang={lang} s={s} onLang={changeLang} onKey={editKey} />
+      <Header lang={lang} s={s} view={view} onNav={setView} onLang={changeLang} onKey={editKey} />
 
       <main>
-        {showEmpty && <EmptyState s={s} onPick={(q) => submit(q)} />}
+        {view === "documents" && <Documents s={s} />}
 
-        {loading && (
-          <div className="loading">
-            <div className="spinner" />
-            <span>{s.loading}</span>
-          </div>
-        )}
-
-        {error && !loading && <div className="errbox">{error}</div>}
-
-        {run && !loading && (
-          <Results
+        {view === "history" && (
+          <History
             s={s}
             lang={lang}
-            question={question}
-            run={run}
-            sources={sources}
-            onFollow={(q) => submit(q)}
+            items={history}
+            onOpen={openFromHistory}
+            onClear={onClearHistory}
           />
+        )}
+
+        {view === "ask" && (
+          <>
+            {showEmpty && <EmptyState s={s} onPick={(q) => submit(q)} />}
+
+            {loading && (
+              <div className="loading">
+                <div className="spinner" />
+                <span>{s.loading}</span>
+              </div>
+            )}
+
+            {error && !loading && <div className="errbox">{error}</div>}
+
+            {run && !loading && (
+              <Results
+                s={s}
+                lang={lang}
+                question={question}
+                run={run}
+                sources={sources}
+                onFollow={(q) => submit(q)}
+              />
+            )}
+          </>
         )}
       </main>
 
-      <div className="askwrap">
-        {refineOpen && (
-          <div className="refine">
-            <label>
-              <span>{s.region}</span>
-              <input
-                placeholder="east"
-                value={filters.region}
-                onChange={(e) => setFilters({ ...filters, region: e.target.value })}
+      {view === "ask" && (
+        <div className="askwrap">
+          {refineOpen && (
+            <div className="refine">
+              <label>
+                <span>{s.region}</span>
+                <input
+                  placeholder="east"
+                  value={filters.region}
+                  onChange={(e) => setFilters({ ...filters, region: e.target.value })}
+                />
+              </label>
+              <label>
+                <span>{s.channel}</span>
+                <input
+                  placeholder="online"
+                  value={filters.channel}
+                  onChange={(e) => setFilters({ ...filters, channel: e.target.value })}
+                />
+              </label>
+              <label>
+                <span>{s.segment}</span>
+                <input
+                  placeholder="enterprise"
+                  value={filters.segment}
+                  onChange={(e) => setFilters({ ...filters, segment: e.target.value })}
+                />
+              </label>
+            </div>
+          )}
+          <div className="askinner">
+            <div className="ask">
+              <button
+                className={"fbtn" + (refineOpen ? " on" : "")}
+                title="Refine"
+                onClick={() => setRefineOpen((v) => !v)}
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24">
+                  <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+                </svg>
+              </button>
+              <textarea
+                rows={1}
+                placeholder={s.ask_placeholder}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
               />
-            </label>
-            <label>
-              <span>{s.channel}</span>
-              <input
-                placeholder="online"
-                value={filters.channel}
-                onChange={(e) => setFilters({ ...filters, channel: e.target.value })}
-              />
-            </label>
-            <label>
-              <span>{s.segment}</span>
-              <input
-                placeholder="enterprise"
-                value={filters.segment}
-                onChange={(e) => setFilters({ ...filters, segment: e.target.value })}
-              />
-            </label>
-          </div>
-        )}
-        <div className="askinner">
-          <div className="ask">
-            <button
-              className={"fbtn" + (refineOpen ? " on" : "")}
-              title="Refine"
-              onClick={() => setRefineOpen((v) => !v)}
-            >
-              <svg width="19" height="19" viewBox="0 0 24 24">
-                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-              </svg>
-            </button>
-            <textarea
-              rows={1}
-              placeholder={s.ask_placeholder}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-            />
-            <button className="send" disabled={loading} onClick={() => submit()}>
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path d="M4 12l16-8-6 16-3-6-7-2Z" fill="#fff" />
-              </svg>
-            </button>
+              <button className="send" disabled={loading} onClick={() => submit()}>
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                  <path d="M4 12l16-8-6 16-3-6-7-2Z" fill="#fff" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

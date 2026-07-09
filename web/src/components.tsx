@@ -1,6 +1,8 @@
 import type { Lang, Strings } from "./i18n";
 import type { AgentRunResponse, DocumentSearchResult } from "./api";
 
+export type View = "ask" | "documents" | "history";
+
 function Hex({ size = 20, faded = false }: { size?: number; faded?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -16,11 +18,15 @@ function Hex({ size = 20, faded = false }: { size?: number; faded?: boolean }) {
 export function Header({
   lang,
   s,
+  view,
+  onNav,
   onLang,
   onKey,
 }: {
   lang: Lang;
   s: Strings;
+  view: View;
+  onNav: (v: View) => void;
   onLang: (l: Lang) => void;
   onKey: () => void;
 }) {
@@ -35,9 +41,21 @@ export function Header({
         </div>
       </div>
       <nav>
-        <button className="on">{s.nav_ask}</button>
-        <button>{s.nav_docs}</button>
-        <button>{s.nav_history}</button>
+        <button className={view === "ask" ? "on" : ""} onClick={() => onNav("ask")}>
+          {s.nav_ask}
+        </button>
+        <button
+          className={view === "documents" ? "on" : ""}
+          onClick={() => onNav("documents")}
+        >
+          {s.nav_docs}
+        </button>
+        <button
+          className={view === "history" ? "on" : ""}
+          onClick={() => onNav("history")}
+        >
+          {s.nav_history}
+        </button>
       </nav>
       <div className="spacer" />
       <div className="ctrls">
@@ -227,7 +245,13 @@ function Kpi({ label, value, caption }: { label: string; value: string; caption?
   );
 }
 
-function Source({ r, fallback }: { r: DocumentSearchResult; fallback: string }) {
+export function Source({
+  r,
+  fallback,
+}: {
+  r: DocumentSearchResult;
+  fallback: string;
+}) {
   const m = r.metadata || {};
   const title = String(m.title || m.source || fallback);
   const doc = r.document || "";

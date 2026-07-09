@@ -30,6 +30,32 @@ export interface Strings {
   docsRetrieved: (n: number) => string;
   examples: string[];
   follow: string[];
+  // Documents page
+  docs_title: string;
+  docs_sub: string;
+  add_heading: string;
+  search_heading: string;
+  upload_hint: string;
+  choose_file: string;
+  or_paste: string;
+  f_title: string;
+  f_source: string;
+  f_content: string;
+  f_dept: string;
+  f_type: string;
+  add_btn: string;
+  adding: string;
+  indexed: (n: number) => string;
+  doc_search_ph: string;
+  search_btn: string;
+  searching: string;
+  no_results: string;
+  // History page
+  hist_title: string;
+  hist_sub: string;
+  hist_empty: string;
+  hist_clear: string;
+  hist_open: string;
 }
 
 export const I18N: Record<Lang, Strings> = {
@@ -73,6 +99,30 @@ export const I18N: Record<Lang, Strings> = {
       "Compare east vs west online",
       "Who approves enterprise contracts?",
     ],
+    docs_title: "Documents",
+    docs_sub: "Add documents to the knowledge base and search across them.",
+    add_heading: "Add a document",
+    search_heading: "Search documents",
+    upload_hint: "Upload a .txt or .md file",
+    choose_file: "Choose file",
+    or_paste: "or paste text",
+    f_title: "Title",
+    f_source: "Source",
+    f_content: "Content",
+    f_dept: "Department",
+    f_type: "Type",
+    add_btn: "Add document",
+    adding: "Adding…",
+    indexed: (n) => `Indexed — ${n} chunk${n === 1 ? "" : "s"} created`,
+    doc_search_ph: "Search your documents…",
+    search_btn: "Search",
+    searching: "Searching…",
+    no_results: "No matching passages found.",
+    hist_title: "History",
+    hist_sub: "Your recent questions on this device.",
+    hist_empty: "You haven't asked anything yet.",
+    hist_clear: "Clear history",
+    hist_open: "Open",
   },
   pt: {
     tagline: "Assistente de dados comerciais",
@@ -114,5 +164,29 @@ export const I18N: Record<Lang, Strings> = {
       "Comparar leste x oeste no online",
       "Quem aprova contratos enterprise?",
     ],
+    docs_title: "Documentos",
+    docs_sub: "Adicione documentos à base de conhecimento e pesquise neles.",
+    add_heading: "Adicionar um documento",
+    search_heading: "Pesquisar documentos",
+    upload_hint: "Envie um arquivo .txt ou .md",
+    choose_file: "Escolher arquivo",
+    or_paste: "ou cole o texto",
+    f_title: "Título",
+    f_source: "Origem",
+    f_content: "Conteúdo",
+    f_dept: "Departamento",
+    f_type: "Tipo",
+    add_btn: "Adicionar documento",
+    adding: "Adicionando…",
+    indexed: (n) => `Indexado — ${n} trecho${n === 1 ? "" : "s"} criado${n === 1 ? "" : "s"}`,
+    doc_search_ph: "Pesquise seus documentos…",
+    search_btn: "Pesquisar",
+    searching: "Pesquisando…",
+    no_results: "Nenhum trecho correspondente encontrado.",
+    hist_title: "Histórico",
+    hist_sub: "Suas perguntas recentes neste dispositivo.",
+    hist_empty: "Você ainda não perguntou nada.",
+    hist_clear: "Limpar histórico",
+    hist_open: "Abrir",
   },
 };
