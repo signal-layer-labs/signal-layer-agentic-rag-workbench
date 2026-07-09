@@ -6,7 +6,7 @@ MCP tool exposure, deterministic evals, production hardening, and an optional
 Agno adapter.
 
 <p align="center">
-  <img src="docs/assets/workbench-architecture.svg" alt="Signal Layer Agentic RAG Workbench architecture" width="900">
+  <img src="docs/assets/workbench-architecture.png" alt="Signal Layer Agentic RAG Workbench architecture" width="960">
 </p>
 
 ## What this is
