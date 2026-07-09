@@ -18,6 +18,16 @@ INFRA_PATHS: Final[set[str]] = {
     "/redoc",
     "/openapi.json",
 }
+APP_SHELL_PREFIX: Final[str] = "/app"
+
+
+def is_app_shell(path: str) -> bool:
+    """The static web UI shell carries no data and stays key-free."""
+    return (
+        path == "/"
+        or path == APP_SHELL_PREFIX
+        or path.startswith(APP_SHELL_PREFIX + "/")
+    )
 
 
 class InMemoryRateLimiter:
@@ -112,7 +122,11 @@ def enforce_security(
                 status_code=422,
             )
 
-    if settings.require_demo_api_key and path not in INFRA_PATHS:
+    if (
+        settings.require_demo_api_key
+        and path not in INFRA_PATHS
+        and not is_app_shell(path)
+    ):
         header_name = settings.demo_api_key_header
         provided = request.headers.get(header_name, "")
         if not provided or not secrets.compare_digest(
@@ -125,7 +139,11 @@ def enforce_security(
                 status_code=401,
             )
 
-    if settings.rate_limit_enabled and path not in {"/health", "/ready"}:
+    if (
+        settings.rate_limit_enabled
+        and path not in {"/health", "/ready"}
+        and not is_app_shell(path)
+    ):
         limit_key = get_client_ip(request)
         if not rate_limiter.allow(
             limit_key,
