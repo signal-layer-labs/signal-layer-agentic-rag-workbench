@@ -12,3 +12,5 @@ build/
 .coverage
 htmlcov/
 postgres_data/
+node_modules/
+web/node_modules/
