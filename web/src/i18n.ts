@@ -26,6 +26,8 @@ export interface Strings {
   overall: string;
   err_generic: string;
   key_prompt: string;
+  workspace: string;
+  demo_note: string;
   document_excerpt: string;
   docsRetrieved: (n: number) => string;
   examples: string[];
@@ -86,6 +88,8 @@ export const I18N: Record<Lang, Strings> = {
     overall: "across all sales",
     err_generic: "Something went wrong. Please try again.",
     key_prompt: "Enter demo API key (leave blank to clear):",
+    workspace: "Sales Ops · Demo",
+    demo_note: "Demo project — the data shown is mock/sample data.",
     document_excerpt: "Document excerpt",
     docsRetrieved: (n) =>
       `${n} document${n === 1 ? "" : "s"} retrieved · deterministic 5-step plan`,
@@ -151,6 +155,8 @@ export const I18N: Record<Lang, Strings> = {
     overall: "em todas as vendas",
     err_generic: "Algo deu errado. Tente novamente.",
     key_prompt: "Informe a API key da demo (deixe em branco para remover):",
+    workspace: "Comercial · Demo",
+    demo_note: "Projeto de demonstração — os dados exibidos são fictícios (mock).",
     document_excerpt: "Trecho do documento",
     docsRetrieved: (n) =>
       `${n} documento${n === 1 ? "" : "s"} recuperado${n === 1 ? "" : "s"} · plano determinístico de 5 passos`,

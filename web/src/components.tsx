@@ -59,6 +59,7 @@ export function Header({
       </nav>
       <div className="spacer" />
       <div className="ctrls">
+        <span className="ws">{s.workspace}</span>
         <div className="lang">
           <button className={lang === "en" ? "on" : ""} onClick={() => onLang("en")}>
             EN
@@ -89,6 +90,7 @@ export function EmptyState({ s, onPick }: { s: Strings; onPick: (q: string) => v
     <div className="empty">
       <h1>{s.empty_title}</h1>
       <p>{s.empty_sub}</p>
+      <p className="demonote">{s.demo_note}</p>
       <div className="examples">
         {s.examples.map((ex) => (
           <button key={ex} className="chip" onClick={() => onPick(ex)}>
@@ -163,6 +165,7 @@ export function Results({
             <div className="badge">{s.controlled}</div>
           </div>
           <div className="atext">{answer}</div>
+          <div className="demonote answer-note">{s.demo_note}</div>
         </div>
       </section>
 
