@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Layer — Ask</title>
+  <style>
+    :root{
+      --indigo:#6d28d9; --indigo2:#7c3aed; --blue:#2563eb; --teal:#0d9488; --green:#16a34a;
+      --amber:#d97706; --red:#dc2626; --ink:#0f172a; --muted:#667085; --line:#eceef3; --bg:#f7f8fc;
+      --card:#ffffff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+    header{position:sticky;top:0;z-index:20;height:64px;background:#fff;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;padding:0 30px;gap:14px;}
+    .brand{display:flex;align-items:center;gap:10px;}
+    .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4c1d95);
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+    .bname{font-size:17px;font-weight:800;line-height:1.1;}
+    .bname small{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+    nav{display:flex;gap:6px;margin-left:24px;}
+    nav button{border:none;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--muted);
+      padding:9px 15px;border-radius:10px;cursor:pointer;}
+    nav button.on{color:var(--indigo);background:#f5f3ff;}
+    .spacer{margin-left:auto;}
+    .ctrls{display:flex;align-items:center;gap:10px;}
+    .lang{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+    .lang button{border:none;background:#fff;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);
+      padding:7px 11px;cursor:pointer;}
+    .lang button.on{background:#f5f3ff;color:var(--indigo);}
+    .iconbtn{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);}
+    .ava{width:36px;height:36px;border-radius:50%;background:#ddd6fe;display:flex;align-items:center;
+      justify-content:center;color:#6d28d9;flex:0 0 auto;}
+
+    main{max-width:900px;margin:0 auto;padding:34px 30px 150px;}
+
+    .empty{text-align:center;padding:70px 10px 20px;}
+    .empty h1{font-size:31px;font-weight:800;letter-spacing:-.5px;}
+    .empty p{color:var(--muted);font-size:16px;margin-top:10px;}
+    .examples{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:26px;}
+    .chip{font-size:13.5px;font-weight:600;color:#374151;background:#fff;border:1px solid var(--line);
+      border-radius:999px;padding:9px 15px;cursor:pointer;}
+    .chip:hover{border-color:#c4b5fd;color:var(--indigo);}
+
+    section{margin-top:22px;}
+    .qlabel{font-size:12.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#98a2b3;}
+    .question{font-size:26px;font-weight:800;line-height:1.3;margin-top:6px;}
+
+    .answer{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 28px;
+      box-shadow:0 10px 30px rgba(16,24,40,.05);}
+    .ahead{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .aicon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4c1d95);
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+    .ahead .t{font-size:16px;font-weight:800;}
+    .ahead .s{font-size:12.5px;color:var(--muted);}
+    .badge{font-size:11px;font-weight:800;color:var(--indigo);background:#f5f3ff;border-radius:999px;
+      padding:4px 11px;margin-left:auto;}
+    .atext{font-size:16px;line-height:1.7;color:#1f2937;white-space:pre-wrap;}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+    .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;}
+    .kpi .kl{font-size:12.5px;color:var(--muted);font-weight:600;}
+    .kpi .kv{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.5px;}
+    .kpi .kc{font-size:12px;font-weight:700;margin-top:4px;color:#98a2b3;}
+
+    .seclabel{font-size:13px;font-weight:800;color:#475467;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .sources{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .src{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;display:flex;gap:12px;}
+    .src .fic{width:38px;height:38px;border-radius:10px;background:#f5f3ff;display:flex;align-items:center;
+      justify-content:center;flex:0 0 auto;}
+    .src .st{font-size:14px;font-weight:700;}
+    .src .ss{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45;}
+    .src .tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;}
+    .tag{display:inline-block;font-size:11px;font-weight:700;color:var(--indigo);background:#f5f3ff;
+      border-radius:7px;padding:3px 9px;}
+
+    .followups{display:flex;flex-wrap:wrap;gap:10px;}
+
+    details.trace{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 18px;}
+    details.trace summary{cursor:pointer;list-style:none;padding:14px 0;font-size:13.5px;font-weight:700;
+      color:#475467;display:flex;align-items:center;gap:8px;}
+    details.trace summary::-webkit-details-marker{display:none;}
+    .steps{padding:2px 0 14px;}
+    .step{display:flex;align-items:center;gap:11px;padding:6px 0;}
+    .step .dot{width:20px;height:20px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;
+      justify-content:center;flex:0 0 auto;}
+    .step .dot.skip{background:#e2e8f0;}
+    .step .nm{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;font-weight:600;}
+    .step .du{margin-left:auto;font-size:12px;color:var(--muted);}
+    .tracenote{font-size:12.5px;color:var(--muted);padding-bottom:12px;}
+
+    .loading{display:none;text-align:center;padding:60px;color:var(--muted);font-weight:600;}
+    .spinner{width:32px;height:32px;border:3px solid #e9d5ff;border-top-color:var(--indigo);border-radius:50%;
+      margin:0 auto 14px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .errbox{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;
+      padding:14px 16px;font-size:14px;font-weight:600;margin-top:18px;}
+    .hidden{display:none;}
+
+    /* bottom ask bar */
+    .askwrap{position:fixed;left:0;right:0;bottom:0;z-index:15;
+      background:linear-gradient(180deg,rgba(247,248,252,0),#f7f8fc 40%);padding:22px 30px 26px;}
+    .askinner{max-width:900px;margin:0 auto;}
+    .refine{max-width:900px;margin:0 auto 10px;display:none;gap:10px;flex-wrap:wrap;
+      background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
+    .refine.open{display:flex;}
+    .refine label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:800;
+      color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+    .refine input{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;
+      font-size:13.5px;min-width:150px;}
+    .ask{background:#fff;border:1.5px solid #ddd6fe;border-radius:16px;
+      box-shadow:0 12px 34px rgba(109,40,217,.12);display:flex;align-items:center;gap:12px;
+      padding:10px 10px 10px 12px;}
+    .ask .fbtn{width:42px;height:42px;border-radius:11px;background:#f5f6fb;border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);flex:0 0 auto;}
+    .ask .fbtn.on{background:#f5f3ff;border-color:#ddd6fe;color:var(--indigo);}
+    .ask textarea{flex:1;border:none;resize:none;font:inherit;font-size:15.5px;line-height:1.4;
+      padding:10px 6px;color:var(--ink);outline:none;background:transparent;height:44px;max-height:130px;}
+    .ask textarea::placeholder{color:#98a2b3;}
+    .ask .send{width:46px;height:46px;border-radius:12px;background:var(--indigo);border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+    .ask .send:disabled{opacity:.5;cursor:default;}
+
+    @media(max-width:720px){
+      nav{display:none;} main{padding-bottom:180px;}
+      .kpis{grid-template-columns:repeat(2,1fr);} .sources{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5-9-5Z" fill="#fff"/><path d="M3 12l9 5 9-5" stroke="#e9d5ff" stroke-width="2" fill="none"/><path d="M3 17l9 5 9-5" stroke="#c4b5fd" stroke-width="2" fill="none"/></svg></div>
+      <div class="bname">Signal Layer<small data-i18n="tagline">Business data assistant</small></div>
+    </div>
+    <nav>
+      <button class="on" data-i18n="nav_ask">Ask</button>
+      <button data-i18n="nav_docs">Documents</button>
+      <button data-i18n="nav_history">History</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="ctrls">
+      <div class="lang" id="lang"><button data-lang="en">EN</button><button data-lang="pt">PT</button></div>
+      <button class="iconbtn" id="keybtn" title="API key">
+        <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M11 11l8 8m-3 0l3-3m-6 0l2 2" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ava"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6" fill="#6d28d9"/><path d="M4.5 20c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6" fill="#6d28d9"/></svg></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- empty state -->
+    <div class="empty" id="empty">
+      <h1 data-i18n="empty_title">Ask about your sales and policies</h1>
+      <p data-i18n="empty_sub">Get a clear answer grounded in your business data and documents.</p>
+      <div class="examples" id="examples"></div>
+    </div>
+
+    <div class="loading" id="loading"><div class="spinner"></div><span data-i18n="loading">Analyzing your data…</span></div>
+    <div class="errbox" id="error"></div>
+
+    <div id="results" class="hidden">
+      <section>
+        <div class="qlabel" data-i18n="your_question">Your question</div>
+        <div class="question" id="qEcho"></div>
+      </section>
+
+      <section>
+        <div class="answer">
+          <div class="ahead">
+            <div class="aicon"><svg width="21" height="21" viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5-9-5Z" fill="#fff"/><path d="M3 12l9 5 9-5" stroke="#e9d5ff" stroke-width="2" fill="none"/></svg></div>
+            <div><div class="t" data-i18n="answer">Answer</div><div class="s" data-i18n="answer_sub">Grounded in your sales data and policy documents</div></div>
+            <div class="badge" data-i18n="controlled">controlled</div>
+          </div>
+          <div class="atext" id="answer"></div>
+        </div>
+      </section>
+
+      <section class="kpis" id="kpis"></section>
+
+      <section id="sourcesWrap">
+        <div class="seclabel"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="#475467" stroke-width="1.6"/></svg><span data-i18n="sources">Sources consulted</span></div>
+        <div class="sources" id="sources"></div>
+      </section>
+
+      <section id="followWrap">
+        <div class="seclabel" data-i18n="related">Related questions</div>
+        <div class="followups" id="followups"></div>
+      </section>
+
+      <section>
+        <details class="trace">
+          <summary><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#475467" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="#475467" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg><span data-i18n="how">How this was produced</span></summary>
+          <div class="tracenote" id="traceNote"></div>
+          <div class="steps" id="steps"></div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <div class="askwrap">
+    <div class="refine" id="refine">
+      <label><span data-i18n="region">Region</span><input id="region" placeholder="east"></label>
+      <label><span data-i18n="channel">Channel</span><input id="channel" placeholder="online"></label>
+      <label><span data-i18n="segment">Segment</span><input id="segment" placeholder="enterprise"></label>
+    </div>
+    <div class="askinner">
+      <div class="ask">
+        <button class="fbtn" id="refineToggle" title="Refine">
+          <svg width="19" height="19" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+        <textarea id="q" rows="1" data-i18n-ph="ask_placeholder" placeholder="Ask about sales, customers or policies…"></textarea>
+        <button class="send" id="ask">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-6-7-2Z" fill="#fff"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const I18N = {
+      en: {
+        tagline:"Business data assistant", nav_ask:"Ask", nav_docs:"Documents", nav_history:"History",
+        region:"Region", channel:"Channel", segment:"Segment",
+        ask_placeholder:"Ask about sales, customers or policies…",
+        empty_title:"Ask about your sales and policies",
+        empty_sub:"Get a clear answer grounded in your business data and documents.",
+        loading:"Analyzing your data…", your_question:"Your question", answer:"Answer",
+        answer_sub:"Grounded in your sales data and policy documents",
+        controlled:"controlled", sources:"Sources consulted", related:"Related questions",
+        how:"How this was produced", revenue:"Revenue", sales:"Sales",
+        customers:"Unique customers", topmix:"Top region · channel", overall:"across all sales",
+        err_generic:"Something went wrong. Please try again.",
+        docs_retrieved:(n)=>`${n} document${n===1?"":"s"} retrieved · deterministic 5-step plan`,
+        examples:[
+          "How are online sales doing in the enterprise segment?",
+          "What do our policies say about discount approval?",
+          "Which regions and channels lead revenue?"
+        ],
+        follow:[
+          "Which deals exceed the 15% discount rule?",
+          "Compare east vs west online",
+          "Who approves enterprise contracts?"
+        ],
+        key_prompt:"Enter demo API key (leave blank to clear):"
+      },
+      pt: {
+        tagline:"Assistente de dados comerciais", nav_ask:"Perguntar", nav_docs:"Documentos", nav_history:"Histórico",
+        region:"Região", channel:"Canal", segment:"Segmento",
+        ask_placeholder:"Pergunte sobre vendas, clientes ou políticas…",
+        empty_title:"Pergunte sobre suas vendas e políticas",
+        empty_sub:"Receba uma resposta clara baseada nos seus dados e documentos.",
+        loading:"Analisando seus dados…", your_question:"Sua pergunta", answer:"Resposta",
+        answer_sub:"Baseada nos seus dados de vendas e documentos de política",
+        controlled:"controlada", sources:"Fontes consultadas", related:"Perguntas relacionadas",
+        how:"Como isso foi produzido", revenue:"Receita", sales:"Vendas",
+        customers:"Clientes únicos", topmix:"Top região · canal", overall:"em todas as vendas",
+        err_generic:"Algo deu errado. Tente novamente.",
+        docs_retrieved:(n)=>`${n} documento${n===1?"":"s"} recuperado${n===1?"":"s"} · plano determinístico de 5 passos`,
+        examples:[
+          "Como estão as vendas online no segmento enterprise?",
+          "O que as políticas dizem sobre aprovação de desconto?",
+          "Quais regiões e canais lideram a receita?"
+        ],
+        follow:[
+          "Quais negócios passam da regra de 15% de desconto?",
+          "Comparar leste x oeste no online",
+          "Quem aprova contratos enterprise?"
+        ],
+        key_prompt:"Informe a API key da demo (deixe em branco para remover):"
+      }
+    };
+
+    let lang = localStorage.getItem("sl_lang") || "en";
+    const $ = (s)=>document.querySelector(s);
+    const el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
+    const t = (k)=>I18N[lang][k];
+
+    function applyLang(){
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(n=>{ n.textContent = t(n.dataset.i18n); });
+      document.querySelectorAll("[data-i18n-ph]").forEach(n=>{ n.placeholder = t(n.dataset.i18nPh); });
+      document.querySelectorAll("#lang button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
+      renderExamples();
+    }
+
+    function renderExamples(){
+      const wrap = $("#examples"); wrap.innerHTML="";
+      t("examples").forEach(ex=>{
+        const c = el("button","chip"); c.textContent = ex;
+        c.onclick = ()=>{ $("#q").value = ex; submit(); };
+        wrap.appendChild(c);
+      });
+    }
+
+    function fmtCurrency(v){
+      const cfg = lang==="pt" ? {l:"pt-BR",c:"BRL"} : {l:"en-US",c:"USD"};
+      return new Intl.NumberFormat(cfg.l,{style:"currency",currency:cfg.c,maximumFractionDigits:0}).format(Number(v||0));
+    }
+    const fmtNum = (v)=>new Intl.NumberFormat(lang==="pt"?"pt-BR":"en-US").format(Number(v||0));
+
+    function apiHeaders(){
+      const h = {"Content-Type":"application/json"};
+      const key = localStorage.getItem("sl_demo_key");
+      if(key) h["X-Demo-API-Key"] = key;
+      return h;
+    }
+
+    async function extractError(res){
+      try{ const j = await res.json(); return (j.error && j.error.message) || t("err_generic"); }
+      catch(e){ return t("err_generic"); }
+    }
+
+    async function submit(){
+      const question = $("#q").value.trim();
+      if(!question) return;
+      $("#ask").disabled = true;
+      $("#empty").classList.add("hidden");
+      $("#results").classList.add("hidden");
+      $("#error").style.display="none";
+      $("#loading").style.display="block";
+
+      const runBody = {
+        business_question: question,
+        retrieval_query: question,
+        sales_region: $("#region").value.trim() || null,
+        sales_channel: $("#channel").value.trim() || null,
+        customer_segment: $("#segment").value.trim() || null,
+        generate_response: true
+      };
+
+      try{
+        const [runRes, searchRes] = await Promise.all([
+          fetch("/agent/run",{method:"POST",headers:apiHeaders(),body:JSON.stringify(runBody)}),
+          fetch("/documents/search",{method:"POST",headers:apiHeaders(),
+            body:JSON.stringify({query:question,limit:4})}).catch(()=>null)
+        ]);
+        if(!runRes.ok) throw new Error(await extractError(runRes));
+        const run = await runRes.json();
+        let sources = [];
+        if(searchRes && searchRes.ok){ sources = (await searchRes.json()).results || []; }
+        render(question, run, sources);
+      }catch(err){
+        $("#loading").style.display="none";
+        const box = $("#error"); box.textContent = err.message || t("err_generic"); box.style.display="block";
+      }finally{
+        $("#ask").disabled = false;
+      }
+    }
+
+    function render(question, run, sources){
+      $("#loading").style.display="none";
+      $("#qEcho").textContent = question;
+      $("#answer").textContent = (run.generated_response && run.generated_response.content) || run.summary || "";
+
+      const s = (run.trace && run.trace.sales_summary) || {};
+      const kpis = [
+        {l:t("revenue"), v:fmtCurrency(s.total_revenue), c:t("overall")},
+        {l:t("sales"), v:fmtNum(s.number_of_sales), c:t("overall")},
+        {l:t("customers"), v:fmtNum(s.unique_customers), c:t("overall")},
+        {l:t("topmix"), v:[s.top_region,s.top_channel].filter(Boolean).join(" · ") || "—", c:""}
+      ];
+      const kwrap = $("#kpis"); kwrap.innerHTML="";
+      kpis.forEach(k=>{
+        const c = el("div","kpi");
+        const l = el("div","kl"); l.textContent = k.l;
+        const v = el("div","kv"); v.textContent = k.v;
+        c.append(l,v);
+        if(k.c){ const cc = el("div","kc"); cc.textContent = k.c; c.appendChild(cc); }
+        kwrap.appendChild(c);
+      });
+
+      const swrap = $("#sources"); swrap.innerHTML="";
+      if(sources.length){
+        $("#sourcesWrap").style.display="";
+        sources.forEach(r=>{
+          const m = r.metadata || {};
+          const title = m.title || m.source || (lang==="pt"?"Trecho do documento":"Document excerpt");
+          const doc = (r.document||"");
+          const snippet = doc.slice(0,150).trim() + (doc.length>150?"…":"");
+          const tags = [m.department, m.document_type].filter(Boolean);
+          const card = el("div","src");
+          const fic = el("div","fic");
+          fic.innerHTML = '<svg width="19" height="19" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" fill="none" stroke="#6d28d9" stroke-width="1.5"/><g stroke="#6d28d9" stroke-width="1.4"><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="14" y2="16"/></g></svg>';
+          const body = el("div");
+          const st = el("div","st"); st.textContent = title;
+          const ss = el("div","ss"); ss.textContent = snippet;
+          body.append(st,ss);
+          if(tags.length){
+            const tg = el("div","tags");
+            tags.forEach(x=>{ const tt=el("span","tag"); tt.textContent=x; tg.appendChild(tt); });
+            body.appendChild(tg);
+          }
+          card.append(fic,body); swrap.appendChild(card);
+        });
+      } else { $("#sourcesWrap").style.display="none"; }
+
+      const fwrap = $("#followups"); fwrap.innerHTML="";
+      t("follow").forEach(f=>{
+        const c = el("button","chip"); c.textContent=f;
+        c.onclick=()=>{ $("#q").value=f; submit(); };
+        fwrap.appendChild(c);
+      });
+
+      $("#traceNote").textContent = t("docs_retrieved")(run.trace ? run.trace.documents_retrieved : 0);
+      const steps = $("#steps"); steps.innerHTML="";
+      (run.execution_plan||[]).forEach(stp=>{
+        const row = el("div","step");
+        const dot = el("div","dot"+(stp.status==="skipped"?" skip":""));
+        dot.innerHTML = stp.status==="skipped"
+          ? '<svg width="10" height="10" viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/></svg>'
+          : '<svg width="10" height="10" viewBox="0 0 24 24"><path d="M5 12l4 4 10-11" stroke="#16a34a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const nm = el("div","nm"); nm.textContent = stp.name;
+        const du = el("div","du"); du.textContent = stp.status;
+        row.append(dot,nm,du); steps.appendChild(row);
+      });
+
+      $("#results").classList.remove("hidden");
+    }
+
+    $("#ask").onclick = submit;
+    $("#q").addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); submit(); } });
+    $("#q").addEventListener("input",(e)=>{ e.target.style.height="44px"; e.target.style.height=Math.min(e.target.scrollHeight,130)+"px"; });
+    $("#refineToggle").onclick = ()=>{ $("#refine").classList.toggle("open"); $("#refineToggle").classList.toggle("on"); };
+    $("#lang").addEventListener("click",(e)=>{
+      const b = e.target.closest("button"); if(!b) return;
+      lang = b.dataset.lang; localStorage.setItem("sl_lang",lang); applyLang();
+    });
+    $("#keybtn").onclick = ()=>{
+      const cur = localStorage.getItem("sl_demo_key") || "";
+      const val = window.prompt(t("key_prompt"), cur);
+      if(val===null) return;
+      if(val.trim()) localStorage.setItem("sl_demo_key", val.trim()); else localStorage.removeItem("sl_demo_key");
+    };
+
+    applyLang();
+  </script>
+</body>
+</html>
